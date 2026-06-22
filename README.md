@@ -29,5 +29,5 @@ the aforementioned ones are the following:
         projects, the repo mangement functionality is in addition to that
     - `repo` seems to have been targetting Android development, although
         there's nothing stopping someone from using it for other projects
-    - `gitman` ¯\_(ツ)_/¯
+    - `gitman` ¯\\_(ツ)_/¯
 
