@@ -19,5 +19,15 @@ other existing tools, namely:
 These all seemed to be written in Python, so I figured writing my own version
 in rust would be a good way to learn the language since it seems relatively
 straightforward enough and there's existing projects that can serve as a
-reference and point of comparison.
+reference and point of comparison. Main improvements `chord` has compared to
+the aforementioned ones are the following:
+
+1. *No dependencies*
+    - Aforementioned tools require Python
+2. *Purpose Built*, 
+    - `west` includes a lot more functionality related to building embedded C
+        projects, the repo mangement functionality is in addition to that
+    - `repo` seems to have been targetting Android development, although
+        there's nothing stopping someone from using it for other projects
+    - `gitman` ¯\_(ツ)_/¯
 
