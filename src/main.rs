@@ -1,13 +1,17 @@
 mod cli;
+mod commands;
+mod manifest;
 
+use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Commands};
+use commands::init;
 
-fn main() {
+fn main() -> Result<()> {
     let args = Cli::parse();
     match args.command {
         Commands::Init { path } => {
-            println!("Initializing chord workspace at {:}", path.display())
+            init::run(path)?;
         }
         Commands::Status => {
             println!("Getting status of workspace")
@@ -34,4 +38,6 @@ fn main() {
             println!("Running command {:} across all repos", command);
         }
     }
+
+    Ok(())
 }
