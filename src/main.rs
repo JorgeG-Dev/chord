@@ -5,7 +5,7 @@ mod manifest;
 use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Commands};
-use commands::init;
+use commands::{init, topdir};
 
 fn main() -> Result<()> {
     let args = Cli::parse();
@@ -23,7 +23,7 @@ fn main() -> Result<()> {
             println!("Printing out the diff for each repo in the workspace")
         }
         Commands::Topdir => {
-            println!("Printing out the top directory of the current workspace")
+            topdir::run()?;
         }
         Commands::Sync => {
             println!("Syncing current directory with manifest lock file, uses manifest as fallback")
