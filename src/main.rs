@@ -1,6 +1,7 @@
 mod cli;
 mod commands;
 mod manifest;
+mod workspace;
 
 use anyhow::Result;
 use clap::Parser;
