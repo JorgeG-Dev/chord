@@ -11,7 +11,8 @@ pub struct File {
 #[derive(Serialize, Deserialize)]
 pub struct Repo {
     /// The URL to the repo, can be either SSH or HTTPS
-    pub url: String,
+    pub remote: String,
+
     /// The revision to checkout, can be a hash or branch. Defaults to main
     pub rev: Option<String>,
 
@@ -21,5 +22,5 @@ pub struct Repo {
 
     /// The directory to clone the repo to, defaults to the directory where
     /// the Chord manifest is located
-    pub path: Option<String>,
+    pub location: Option<String>,
 }

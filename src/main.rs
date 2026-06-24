@@ -1,7 +1,8 @@
 mod cli;
 mod commands;
 mod manifest;
-mod workspace;
+mod repo;
+mod utils;
 
 use anyhow::Result;
 use clap::Parser;

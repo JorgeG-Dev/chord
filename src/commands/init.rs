@@ -17,13 +17,14 @@ pub fn run(path: impl AsRef<path::Path>) -> Result<()> {
             manifest_dir.display()
         ));
     }
+    let manifest_dir = manifest_dir.canonicalize()?;
 
     // 2. Create the default configuration
     let default_repo = manifest::Repo {
-        url: String::from("https://github.com/JorgeG-Dev/chord"),
+        remote: String::from("https://github.com/JorgeG-Dev/chord"),
         rev: Some(String::from("main")),
         name: Some(String::from("chord")),
-        path: Some(String::from(".")),
+        location: Some(String::from(".")),
     };
     let default_manifest = manifest::File {
         repos: vec![default_repo],
