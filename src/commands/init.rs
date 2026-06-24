@@ -23,6 +23,7 @@ pub fn run(path: impl AsRef<path::Path>) -> Result<()> {
         url: String::from("https://github.com/JorgeG-Dev/chord"),
         rev: Some(String::from("main")),
         name: Some(String::from("chord")),
+        path: Some(String::from(".")),
     };
     let default_manifest = manifest::File {
         repos: vec![default_repo],

@@ -14,7 +14,12 @@ pub struct Repo {
     pub url: String,
     /// The revision to checkout, can be a hash or branch. Defaults to main
     pub rev: Option<String>,
-    /// The location in the Chord workspace to clone the repo to. Defaults to
-    /// the repo name as the location
+
+    /// The name of the directory to clone the repo under, defaults to the
+    /// name of the repository if not provided
     pub name: Option<String>,
+
+    /// The directory to clone the repo to, defaults to the directory where
+    /// the Chord manifest is located
+    pub path: Option<String>,
 }
