@@ -22,11 +22,11 @@ pub fn run(path: impl AsRef<path::Path>) -> Result<()> {
     // 2. Create the default configuration
     let default_repo = manifest::Repo {
         remote: String::from("https://github.com/JorgeG-Dev/chord"),
-        rev: Some(String::from("main")),
+        rev: Some(manifest::Rev::Branch(String::from("main"))),
         name: Some(String::from("chord")),
         location: Some(String::from(".")),
     };
-    let default_manifest = manifest::File {
+    let default_manifest = manifest::Manifest {
         repos: vec![default_repo],
     };
 

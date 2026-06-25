@@ -1,16 +1,19 @@
 mod cli;
 mod commands;
+mod git;
 mod manifest;
-mod repo;
 mod utils;
+mod workspace;
 
 use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Commands};
-use commands::{init, topdir};
+use commands::{init, sync, topdir};
+use git::libgit2;
 
 fn main() -> Result<()> {
     let args = Cli::parse();
+    let backend = libgit2::Git2Backend;
     match args.command {
         Commands::Init { path } => {
             init::run(path)?;
@@ -28,7 +31,7 @@ fn main() -> Result<()> {
             topdir::run()?;
         }
         Commands::Sync => {
-            println!("Syncing current directory with manifest lock file, uses manifest as fallback")
+            sync::run(&backend)?;
         }
         Commands::Update => {
             println!("Updating the hashes for all repos pinned to branches")

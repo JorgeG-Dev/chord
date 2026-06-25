@@ -162,6 +162,7 @@ dependencies = [
  "rstest",
  "serde",
  "serde-saphyr",
+ "thiserror",
 ]
 
 [[package]]
