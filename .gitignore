@@ -24,3 +24,6 @@ target
 # Added by cargo
 
 /target
+
+# Related to testing of this project
+chord.*

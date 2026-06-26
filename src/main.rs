@@ -1,22 +1,17 @@
 mod cli;
 mod commands;
-mod git;
-mod manifest;
-mod utils;
 mod workspace;
 
 use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Commands};
-use commands::{init, sync, topdir};
-use git::libgit2;
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let backend = libgit2::Git2Backend;
+    let backend = workspace::GitBackend;
     match args.command {
         Commands::Init { path } => {
-            init::run(path)?;
+            commands::init(path)?;
         }
         Commands::Status => {
             println!("Getting status of workspace")
@@ -28,10 +23,10 @@ fn main() -> Result<()> {
             println!("Printing out the diff for each repo in the workspace")
         }
         Commands::Topdir => {
-            topdir::run()?;
+            commands::topdir()?;
         }
         Commands::Sync => {
-            sync::run(&backend)?;
+            commands::sync(&backend)?;
         }
         Commands::Update => {
             println!("Updating the hashes for all repos pinned to branches")

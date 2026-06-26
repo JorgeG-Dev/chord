@@ -1,4 +1,4 @@
-use crate::manifest;
+use super::{ManifestRepo, ManifestRev};
 use gix_url;
 use std::path::{Path, PathBuf};
 
@@ -17,13 +17,13 @@ pub struct Repo {
 
 /// Conversion from manifest to actual repo consists of converting each
 /// individual field and setting them to a sane default if not provided
-impl TryFrom<manifest::Repo> for Repo {
+impl TryFrom<ManifestRepo> for Repo {
     type Error = anyhow::Error;
-    fn try_from(raw_repo: manifest::Repo) -> Result<Self> {
+    fn try_from(raw_repo: ManifestRepo) -> Result<Self> {
         let remote = Remote::try_from(raw_repo.remote)?;
         let rev = match raw_repo.rev {
             Some(value) => Rev::try_from(value)?,
-            None => Rev::try_from(manifest::Rev::Branch(String::from("main")))?,
+            None => Rev::try_from(ManifestRev::Branch(String::from("main")))?,
         };
         let location = match raw_repo.location {
             Some(value) => Location::try_from(value)?,
@@ -90,25 +90,25 @@ pub enum Rev {
 }
 
 /// Just checking the length
-impl TryFrom<manifest::Rev> for Rev {
+impl TryFrom<ManifestRev> for Rev {
     type Error = anyhow::Error;
-    fn try_from(raw: manifest::Rev) -> Result<Self> {
+    fn try_from(raw: ManifestRev) -> Result<Self> {
         let rev = match raw {
-            manifest::Rev::Tag(tag) => {
+            ManifestRev::Tag(tag) => {
                 if tag.len() > 0 && !tag.contains(' ') {
                     Rev::Tag(tag)
                 } else {
                     bail!("Empty tag specified")
                 }
             }
-            manifest::Rev::Branch(branch) => {
+            ManifestRev::Branch(branch) => {
                 if branch.len() > 0 && !branch.contains(' ') {
                     Rev::Branch(branch)
                 } else {
                     bail!("Empty branch specified")
                 }
             }
-            manifest::Rev::Hash(hash) => {
+            ManifestRev::Hash(hash) => {
                 if hash.len() == HASH_LENGTH && hash.chars().all(|c| c.is_ascii_hexdigit()) {
                     Rev::Hash(hash)
                 } else {
@@ -236,7 +236,7 @@ mod tests {
         fn valid_branch(#[case] branch: String) {
             assert_eq!(
                 true,
-                Rev::try_from(manifest::Rev::Branch(String::from(branch))).is_ok()
+                Rev::try_from(ManifestRev::Branch(String::from(branch))).is_ok()
             )
         }
 
@@ -247,7 +247,7 @@ mod tests {
         fn invalid_branch(#[case] branch: String) {
             assert_eq!(
                 true,
-                Rev::try_from(manifest::Rev::Branch(String::from(branch))).is_err()
+                Rev::try_from(ManifestRev::Branch(String::from(branch))).is_err()
             )
         }
 
@@ -256,7 +256,7 @@ mod tests {
         fn valid_tag(#[case] tag: String) {
             assert_eq!(
                 true,
-                Rev::try_from(manifest::Rev::Tag(String::from(tag))).is_ok()
+                Rev::try_from(ManifestRev::Tag(String::from(tag))).is_ok()
             )
         }
 
@@ -267,7 +267,7 @@ mod tests {
         fn invalid_tag(#[case] tag: String) {
             assert_eq!(
                 true,
-                Rev::try_from(manifest::Rev::Tag(String::from(tag))).is_err()
+                Rev::try_from(ManifestRev::Tag(String::from(tag))).is_err()
             )
         }
 
@@ -276,7 +276,7 @@ mod tests {
         fn valid_hash(#[case] hash: String) {
             assert_eq!(
                 true,
-                Rev::try_from(manifest::Rev::Hash(String::from(hash))).is_ok()
+                Rev::try_from(ManifestRev::Hash(String::from(hash))).is_ok()
             )
         }
 
@@ -286,7 +286,7 @@ mod tests {
         fn invalid_hash(#[case] hash: String) {
             assert_eq!(
                 true,
-                Rev::try_from(manifest::Rev::Hash(String::from(hash))).is_err()
+                Rev::try_from(ManifestRev::Hash(String::from(hash))).is_err()
             )
         }
     }
@@ -314,9 +314,9 @@ mod tests {
 
         #[test]
         fn missing_name() {
-            let manifest_repo = manifest::Repo {
+            let manifest_repo = ManifestRepo {
                 remote: String::from("https://github.com/JorgeG-Dev/chord.git"),
-                rev: Some(manifest::Rev::Branch(String::from("branch"))),
+                rev: Some(ManifestRev::Branch(String::from("branch"))),
                 location: Some(String::from("deps")),
                 name: None,
             };
@@ -327,9 +327,9 @@ mod tests {
 
         #[test]
         fn missing_location() {
-            let manifest_repo = manifest::Repo {
+            let manifest_repo = ManifestRepo {
                 remote: String::from("https://github.com/JorgeG-Dev/chord.git"),
-                rev: Some(manifest::Rev::Branch(String::from("branch"))),
+                rev: Some(ManifestRev::Branch(String::from("branch"))),
                 location: None,
                 name: Some(String::from("name")),
             };
@@ -340,7 +340,7 @@ mod tests {
 
         #[test]
         fn missing_rev() {
-            let manifest_repo = manifest::Repo {
+            let manifest_repo = ManifestRepo {
                 remote: String::from("https://github.com/JorgeG-Dev/chord.git"),
                 rev: None,
                 location: Some(String::from("deps")),
@@ -355,7 +355,7 @@ mod tests {
         #[case("https://github.com/org/chord.git")]
         #[case("http://github.com/org/chord.git")]
         fn missing_all_except_remote(#[case] remote: String) {
-            let manifest_repo = manifest::Repo {
+            let manifest_repo = ManifestRepo {
                 remote,
                 rev: None,
                 location: None,

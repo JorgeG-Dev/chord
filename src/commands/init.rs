@@ -1,4 +1,4 @@
-use crate::manifest;
+use crate::workspace::{Manifest, ManifestRepo, ManifestRev};
 use anyhow::{Context, Result, anyhow, bail};
 use serde_saphyr;
 use std::fs::File;
@@ -20,13 +20,13 @@ pub fn run(path: impl AsRef<path::Path>) -> Result<()> {
     let manifest_dir = manifest_dir.canonicalize()?;
 
     // 2. Create the default configuration
-    let default_repo = manifest::Repo {
+    let default_repo = ManifestRepo {
         remote: String::from("https://github.com/JorgeG-Dev/chord"),
-        rev: Some(manifest::Rev::Branch(String::from("main"))),
+        rev: Some(ManifestRev::Branch(String::from("main"))),
         name: Some(String::from("chord")),
         location: Some(String::from(".")),
     };
-    let default_manifest = manifest::Manifest {
+    let default_manifest = Manifest {
         repos: vec![default_repo],
     };
 

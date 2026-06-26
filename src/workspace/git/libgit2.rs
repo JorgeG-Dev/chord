@@ -1,13 +1,12 @@
-use crate::git;
-use crate::workspace::repo::{Remote, Rev};
+use super::*;
 use anyhow::Result;
 use git2::{BranchType, Oid, Repository};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// Don't need any fields, just a target for implementing the backend
 pub struct Git2Backend;
 
-impl git::Backend for Git2Backend {
+impl Operations for Git2Backend {
     fn is_repo(&self, repo_dir: impl AsRef<Path>) -> bool {
         Repository::open(repo_dir).is_ok()
     }

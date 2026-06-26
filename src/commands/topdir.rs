@@ -1,4 +1,4 @@
-use crate::utils;
+use crate::workspace::utils;
 use anyhow::Result;
 
 /// Prints out the topdir of the current workspace, assuming the command is
