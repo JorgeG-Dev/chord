@@ -52,10 +52,11 @@ pub fn run(operations: &impl GitOperations) -> Result<()> {
         let remote = repo.remote.clone();
         let mut revision = repo.revision.clone();
         let name = repo.name.clone();
-        let location = match repo.location.clone() {
-            Some(value) => value,
-            None => top_dir.clone(),
-        };
+        let location = repo
+            .location
+            .as_ref()
+            .map(|l| top_dir.join(l))
+            .unwrap_or_else(|| top_dir.clone());
 
         let repo_dir = PathBuf::from(&top_dir).join(location).join(name.as_str());
         if !operations.is_repo(&repo_dir) {
