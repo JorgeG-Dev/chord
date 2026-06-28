@@ -1,13 +1,13 @@
-use crate::workspace::{Manifest, ManifestRepo, ManifestRev};
+use crate::workspace::{Manifest, ManifestRepo};
 use anyhow::{Context, Result, anyhow, bail};
 use serde_saphyr;
 use std::fs::File;
 use std::io::ErrorKind;
-use std::path;
+use std::path::{Path, PathBuf};
 
 /// Initializes a Chord workspace by creating a chord.yaml file at the
 /// specified directory
-pub fn run(path: impl AsRef<path::Path>) -> Result<()> {
+pub fn run(path: impl AsRef<Path>) -> Result<()> {
     let manifest_dir = path.as_ref();
 
     // 1. Check if the provided manifest directory actually exists
@@ -22,9 +22,9 @@ pub fn run(path: impl AsRef<path::Path>) -> Result<()> {
     // 2. Create the default configuration
     let default_repo = ManifestRepo {
         remote: String::from("https://github.com/JorgeG-Dev/chord"),
-        rev: Some(ManifestRev::Branch(String::from("main"))),
-        name: Some(String::from("chord")),
-        location: Some(String::from(".")),
+        revision: String::from("main"),
+        name: String::from("chord"),
+        location: Some(PathBuf::from(".")),
     };
     let default_manifest = Manifest {
         repos: vec![default_repo],
