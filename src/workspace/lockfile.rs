@@ -1,5 +1,3 @@
-use super::manifest::Manifest;
-
 use serde::{Deserialize, Serialize};
 
 /// Represents the complete Chord lockfile.
@@ -18,20 +16,4 @@ pub struct Repo {
 
     /// The revision to checkout, can be a hash or branch.
     pub revision: String,
-}
-
-/// An easy way to convert from a Manifest file to a lockfile
-impl From<Manifest> for Lockfile {
-    fn from(manifest: Manifest) -> Self {
-        Self {
-            repos: manifest
-                .repos
-                .iter()
-                .map(|repo| Repo {
-                    name: repo.name.clone(),
-                    revision: repo.revision.clone(),
-                })
-                .collect(),
-        }
-    }
 }
