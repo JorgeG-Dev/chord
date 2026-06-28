@@ -41,21 +41,6 @@ pub fn run(operations: &impl GitOperations) -> Result<()> {
         operations.fetch(&repo_dir)?;
         operations.checkout(&revision, &repo_dir)?;
     }
-    /*
-    for repo in workspace.repos {
-        let repo_dir = PathBuf::new()
-            .join(&top_dir)
-            .join(repo.location.as_path())
-            .join(repo.name.as_str());
-
-        // Only try to clone if the repo doesn't exist yet
-        if !operations.is_repo(&repo_dir) {
-            operations.clone_repo(&repo.remote, &repo_dir)?;
-        }
-        operations.fetch(&repo_dir)?;
-        operations.checkout(&repo.rev, &repo_dir)?;
-    }
-    */
 
     Ok(())
 }
