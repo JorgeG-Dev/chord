@@ -1,7 +1,6 @@
 use crate::workspace::{GitOperations, Lockfile, Manifest, utils};
 use serde_saphyr;
 use std::collections::HashMap;
-use std::io::Write;
 use std::{fs::File, path::PathBuf};
 
 use anyhow::{Result, bail};
