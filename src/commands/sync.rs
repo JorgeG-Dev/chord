@@ -69,8 +69,8 @@ pub fn run(operations: &impl GitOperations) -> Result<()> {
         if !operations.is_repo(&repo_dir) {
             operations.clone_repo(&remote, &repo_dir)?;
         }
-        revision = operations.rev_as_hash(&repo_dir, revision.as_str())?;
         operations.fetch(&repo_dir)?;
+        revision = operations.rev_as_hash(&repo_dir, revision.as_str())?;
         operations.checkout(&revision, &repo_dir)?;
         repo.revision = revision;
     }
