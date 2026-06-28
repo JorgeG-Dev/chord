@@ -1,10 +1,13 @@
 use crate::workspace::{GitOperations, LockedRepo, Lockfile, Manifest, Operations};
+
+use anyhow::{Result, bail};
 use serde_saphyr;
 use std::collections::HashMap;
 use std::{fs::File, path::PathBuf};
 
-use anyhow::{Result, bail};
-
+/// Attempts to sync the workspace to the lockfile. If no lockfile exists,
+/// falls back to the manifest file and creates a new lockfile. Clones (if
+/// necessary), fetches, and checks out the specified revision
 pub fn run(workspace: impl Operations) -> Result<()> {
     let top_dir = workspace.top_dir();
     let operations = workspace.git();
