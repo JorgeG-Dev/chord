@@ -1,20 +1,15 @@
-use crate::workspace::{GitOperations, LockedRepo, Lockfile, Manifest, utils};
+use crate::workspace::{GitOperations, LockedRepo, Lockfile, Manifest, Operations};
 use serde_saphyr;
 use std::collections::HashMap;
 use std::{fs::File, path::PathBuf};
 
 use anyhow::{Result, bail};
 
-pub fn run(operations: &impl GitOperations) -> Result<()> {
-    // 1. Find the top directory where the manifest is located
-    let top_dir = match utils::get_top_dir() {
-        Some(dir) => dir,
-        None => {
-            bail!("Not within a Chord workspace")
-        }
-    };
+pub fn run(workspace: impl Operations) -> Result<()> {
+    let top_dir = workspace.top_dir();
+    let operations = workspace.git();
 
-    // 2. Open and parse the manifest file
+    // 1. Open and parse the manifest file
     let manifest_file = match File::open(top_dir.join("chord.yaml")) {
         Ok(file) => file,
         Err(_) => {
@@ -23,7 +18,7 @@ pub fn run(operations: &impl GitOperations) -> Result<()> {
     };
     let mut manifest: Manifest = serde_saphyr::from_reader(manifest_file)?;
 
-    // 3. Try to open the lockfile and get its contents
+    // 2. Try to open the lockfile and get its contents
     let locked_repos = match File::open(top_dir.join("chord.lock.yaml")) {
         Ok(file) => {
             let lockfile: Lockfile = serde_saphyr::from_reader(file)?;
@@ -36,7 +31,7 @@ pub fn run(operations: &impl GitOperations) -> Result<()> {
         Err(_) => None,
     };
 
-    // 4. If a lockfile was actually parsed, go through the manifest, updating
+    // 3. If a lockfile was actually parsed, go through the manifest, updating
     // updating the revisions and location
     if let Some(repos) = locked_repos {
         for manifest_repo in &mut manifest.repos {
@@ -46,7 +41,7 @@ pub fn run(operations: &impl GitOperations) -> Result<()> {
         }
     }
 
-    // 5. Drain the manifest repos, perform sync operations, and create lockfile
+    // 4. Drain the manifest repos, perform sync operations, and create lockfile
     // struct
     let mut lockfile_repos = vec![];
     for repo in manifest.repos.drain(..) {
@@ -54,7 +49,7 @@ pub fn run(operations: &impl GitOperations) -> Result<()> {
             .location
             .as_ref()
             .map(|l| top_dir.join(l))
-            .unwrap_or_else(|| top_dir.clone());
+            .unwrap_or_else(|| top_dir.to_path_buf());
         let repo_dir = PathBuf::from(&top_dir)
             .join(location)
             .join(repo.name.as_str());
@@ -71,7 +66,7 @@ pub fn run(operations: &impl GitOperations) -> Result<()> {
         });
     }
 
-    // 6. Create a lockfile out of the contents in the current manifest struct
+    // 5. Create a lockfile out of the contents in the current manifest struct
     let mut new_lockfile = File::create(top_dir.join("chord.lock.yaml"))?;
     let new_lockfile_contents = Lockfile {
         repos: lockfile_repos,
