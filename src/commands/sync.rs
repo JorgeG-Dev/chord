@@ -38,21 +38,13 @@ pub fn run(operations: &impl GitOperations) -> Result<()> {
 
     // 4. If a lockfile was actually parsed, go through the manifest, updating
     //  updating the revisions and location
-    match locked_repos {
-        Some(repos) => {
-            for manifest_repo in &mut manifest.repos {
-                match repos.get(&manifest_repo.name) {
-                    Some(revision) => {
-                        manifest_repo.revision = String::from(revision);
-                    }
-                    None => {
-                        continue;
-                    }
-                };
+    if let Some(repos) = locked_repos {
+        for manifest_repo in &mut manifest.repos {
+            if let Some(revision) = repos.get(&manifest_repo.name) {
+                manifest_repo.revision = revision.clone();
             }
         }
-        None => {}
-    };
+    }
 
     // 5. Go through each manifest repo, cloning, fetching and checking out
     //  the correct revision
