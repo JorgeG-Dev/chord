@@ -1,4 +1,4 @@
-use crate::workspace::{GitOperations, Lockfile, Manifest, utils};
+use crate::workspace::{GitOperations, LockedRepo, Lockfile, Manifest, utils};
 use serde_saphyr;
 use std::collections::HashMap;
 use std::{fs::File, path::PathBuf};
@@ -37,7 +37,7 @@ pub fn run(operations: &impl GitOperations) -> Result<()> {
     };
 
     // 4. If a lockfile was actually parsed, go through the manifest, updating
-    //  updating the revisions and location
+    // updating the revisions and location
     if let Some(repos) = locked_repos {
         for manifest_repo in &mut manifest.repos {
             if let Some(revision) = repos.get(&manifest_repo.name) {
@@ -46,31 +46,36 @@ pub fn run(operations: &impl GitOperations) -> Result<()> {
         }
     }
 
-    // 5. Go through each manifest repo, cloning, fetching and checking out
-    //  the correct revision
-    for repo in &mut manifest.repos {
-        let remote = repo.remote.clone();
-        let mut revision = repo.revision.clone();
-        let name = repo.name.clone();
+    // 5. Drain the manifest repos, perform sync operations, and create lockfile
+    // struct
+    let mut lockfile_repos = vec![];
+    for repo in manifest.repos.drain(..) {
         let location = repo
             .location
             .as_ref()
             .map(|l| top_dir.join(l))
             .unwrap_or_else(|| top_dir.clone());
+        let repo_dir = PathBuf::from(&top_dir)
+            .join(location)
+            .join(repo.name.as_str());
 
-        let repo_dir = PathBuf::from(&top_dir).join(location).join(name.as_str());
         if !operations.is_repo(&repo_dir) {
-            operations.clone_repo(&remote, &repo_dir)?;
+            operations.clone_repo(&repo.remote, &repo_dir)?;
         }
         operations.fetch(&repo_dir)?;
-        revision = operations.rev_as_hash(&repo_dir, revision.as_str())?;
+        let revision = operations.rev_as_hash(&repo_dir, &repo.revision)?;
         operations.checkout(&revision, &repo_dir)?;
-        repo.revision = revision;
+        lockfile_repos.push(LockedRepo {
+            name: repo.name,
+            revision: repo.revision,
+        });
     }
 
     // 6. Create a lockfile out of the contents in the current manifest struct
     let mut new_lockfile = File::create(top_dir.join("chord.lock.yaml"))?;
-    let new_lockfile_contents = Lockfile::from(manifest);
+    let new_lockfile_contents = Lockfile {
+        repos: lockfile_repos,
+    };
     serde_saphyr::to_io_writer(&mut new_lockfile, &new_lockfile_contents)?;
     Ok(())
 }
