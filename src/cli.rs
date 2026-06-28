@@ -31,9 +31,6 @@ pub enum Commands {
     /// Updates any repos pointing to a branch to the latest commit and
     /// updates the lockfile
     Update,
-    /// Resolves current repo HEADs to SHAs and writes a lockfile without
-    /// changing anything
-    Lock,
     /// Runs a user provided command in each repo in the chord workspace
     Forall {
         /// Command to run in each repo

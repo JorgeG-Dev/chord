@@ -31,9 +31,6 @@ fn main() -> Result<()> {
         Commands::Update => {
             println!("Updating the hashes for all repos pinned to branches")
         }
-        Commands::Lock => {
-            println!("Locking in the current workspace revisions")
-        }
         Commands::Forall { command } => {
             println!("Running command {:} across all repos", command);
         }
