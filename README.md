@@ -23,11 +23,18 @@ reference and point of comparison. Main improvements `chord` has compared to
 the aforementioned ones are the following:
 
 1. *No dependencies*
-    - Aforementioned tools require Python
+    - Aforementioned tools require Python, Chord would be just the single
+    binary.
 2. *Purpose Built*, 
     - `west` includes a lot more functionality related to building embedded C
-        projects, the repo mangement functionality is in addition to that
-    - `repo` seems to have been targetting Android development, although
-        there's nothing stopping someone from using it for other projects
+        projects, the repo mangement functionality is in addition to that.
+    - `repo` seems to have been targetted for Android development, although
+        there's nothing stopping someone from using it for other projects.
     - `gitman` ¯\\_(ツ)_/¯
+
+***Note: The app is in active development, this README will be updated as
+functionality is added. For now, it's just a simple README about what the 
+project is about***
+
+
 
