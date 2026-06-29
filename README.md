@@ -1,6 +1,7 @@
 # Chord
 
 - [About](#about)
+- [Usage](#usage)
 
 ## About
 
