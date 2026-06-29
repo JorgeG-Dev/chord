@@ -311,4 +311,56 @@ repos:
         assert_eq!(0, workspace.git.rev_as_hash_count.get());
         assert_eq!(0, workspace.git.checkout_count.get());
     }
+
+    #[test]
+    fn test_sync_uses_manifest_revision_if_repo_not_in_lockfile() {
+        let dir = tempdir().unwrap();
+        fs::write(dir.path().join("chord.yaml"), default_manifest()).unwrap();
+        fs::write(
+            dir.path().join("chord.lock.yaml"),
+            r#"
+repos:
+  - name: dummy 
+    revision: 0123456789012345678901234567890123456789
+"#,
+        )
+        .unwrap();
+
+        let workspace = MockWorkspace {
+            top_dir: dir.path().to_path_buf(),
+            git: MockGitBackend::new(),
+        };
+        workspace.git.is_repo_return.set(false);
+
+        run(&workspace).unwrap();
+
+        assert_eq!("main", workspace.git.rev_as_hash_rev.take());
+    }
+
+    #[test]
+    fn test_sync_overwrites_lockfile_with_new_sha() {
+        let dir = tempdir().unwrap();
+        fs::write(dir.path().join("chord.yaml"), default_manifest()).unwrap();
+        // write an existing lockfile
+        fs::write(
+            dir.path().join("chord.lock.yaml"),
+            r#"
+repos:
+  - name: chord
+    revision: 0123456789012345678901234567890123456789
+"#,
+        )
+        .unwrap();
+
+        let workspace = MockWorkspace {
+            top_dir: dir.path().to_path_buf(),
+            git: MockGitBackend::new(),
+        };
+        workspace.git.is_repo_return.set(false);
+
+        run(&workspace).unwrap();
+
+        let lockfile_contents = fs::read_to_string(dir.path().join("chord.lock.yaml")).unwrap();
+        assert!(lockfile_contents.contains("0123456789012345678901234567890123456789"));
+    }
 }
