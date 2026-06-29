@@ -29,7 +29,7 @@ fn main() -> Result<()> {
                     println!("Printing out the diff for each repo in the workspace")
                 }
                 Commands::Sync => {
-                    commands::sync(workspace)?;
+                    commands::sync(&workspace)?;
                 }
                 Commands::Update => {
                     println!("Updating the hashes for all repos pinned to branches")
