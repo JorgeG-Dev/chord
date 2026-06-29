@@ -21,7 +21,7 @@ pub fn run(workspace: &impl Operations) -> Result<()> {
     };
     let mut manifest: Manifest = serde_saphyr::from_reader(manifest_file)?;
 
-    // 2. Drain the manifest repos, perform sync operations, and create lockfile
+    // 2. Drain the manifest repos, perform update operations, and create lockfile
     // struct
     let mut lockfile_repos = vec![];
     for repo in manifest.repos.drain(..) {
