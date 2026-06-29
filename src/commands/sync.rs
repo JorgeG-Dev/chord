@@ -65,7 +65,7 @@ pub fn run(workspace: &impl Operations) -> Result<()> {
         operations.checkout(&revision, &repo_dir)?;
         lockfile_repos.push(LockedRepo {
             name: repo.name,
-            revision: repo.revision,
+            revision: revision,
         });
     }
 
@@ -110,6 +110,7 @@ mod tests {
         fetch_count: Cell<u32>,
         rev_as_hash_count: Cell<u32>,
         rev_as_hash_rev: Cell<String>,
+        rev_as_hash_return: Cell<String>,
         checkout_count: Cell<u32>,
     }
 
@@ -124,7 +125,9 @@ mod tests {
         fn rev_as_hash(&self, repo_dir: impl AsRef<std::path::Path>, rev: &str) -> Result<String> {
             self.rev_as_hash_rev.set(String::from(rev));
             self.rev_as_hash_count.set(self.rev_as_hash_count.get() + 1);
-            Ok(String::from("0123456789012345678901234567890123456789"))
+            let value = self.rev_as_hash_return.take();
+            self.rev_as_hash_return.set(value.clone());
+            Ok(value)
         }
 
         #[allow(unused)]
@@ -155,6 +158,7 @@ mod tests {
                 fetch_count: Cell::new(0),
                 rev_as_hash_count: Cell::new(0),
                 rev_as_hash_rev: Cell::new(String::new()),
+                rev_as_hash_return: Cell::new(String::new()),
                 checkout_count: Cell::new(0),
             }
         }
@@ -341,7 +345,6 @@ repos:
     fn test_sync_overwrites_lockfile_with_new_sha() {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("chord.yaml"), default_manifest()).unwrap();
-        // write an existing lockfile
         fs::write(
             dir.path().join("chord.lock.yaml"),
             r#"
@@ -357,10 +360,15 @@ repos:
             git: MockGitBackend::new(),
         };
         workspace.git.is_repo_return.set(false);
+        workspace
+            .git
+            .rev_as_hash_return
+            .set(String::from("11223344"));
 
         run(&workspace).unwrap();
 
         let lockfile_contents = fs::read_to_string(dir.path().join("chord.lock.yaml")).unwrap();
-        assert!(lockfile_contents.contains("0123456789012345678901234567890123456789"));
+        println!("{:?}", lockfile_contents);
+        assert!(lockfile_contents.contains("11223344"));
     }
 }
