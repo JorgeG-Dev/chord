@@ -80,7 +80,6 @@ pub fn run(workspace: &impl Operations) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use crate::workspace;
 
     use super::*;
     use pretty_assertions::assert_eq;
