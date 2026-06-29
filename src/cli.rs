@@ -28,8 +28,8 @@ pub enum Commands {
     /// Clones missing repos, fetches, and checks out to whatever is in the
     /// lockfile, defaults to chord manifest if there is no lockfile provided
     Sync,
-    /// Updates any repos pointing to a branch to the latest commit and
-    /// updates the lockfile
+    /// Performs same operations as sync, key difference being that it uses
+    /// the manifest, regardless of whether there's a lockfile or not
     Update,
     /// Runs a user provided command in each repo in the chord workspace
     Forall {
