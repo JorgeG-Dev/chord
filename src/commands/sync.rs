@@ -1,3 +1,4 @@
+//! Contains the logic for performing the Sync command
 use crate::workspace::{GitOperations, LockedRepo, Lockfile, Manifest, Operations};
 
 use anyhow::{Result, bail};
@@ -5,9 +6,37 @@ use serde_saphyr;
 use std::collections::HashMap;
 use std::{fs::File, path::PathBuf};
 
-/// Attempts to sync the workspace to the lockfile. If no lockfile exists,
-/// falls back to the manifest file and creates a new lockfile. Clones (if
-/// necessary), fetches, and checks out the specified revision
+/// Runs the Chord workspace sync process
+///
+/// Attempts to sync the Chord workspace to the lockfile versions by doing the following:
+///
+/// 1. Clone the repo (if not already on the filesystem)
+/// 2. Fetch the repo from the remote
+/// 3. Checkout the repo to the specified revision
+///
+/// Uses the lockfile as the source for the revisions. If not available, the manifest
+/// file is used and a new lockfile is generated.
+///
+/// # Arguments
+/// `workspace` - An object that implements the workspace operations trait
+///
+/// # Returns
+///
+/// Returns Ok on successful syncing of workspace, Err if sync fails for any
+/// reason.
+///
+/// # Errors
+///
+/// No specific error values are returned, but the command can fail for the
+/// following reasons:
+/// 1. Can't open manifest file
+/// 2. One of the git operations fails
+/// 3. Failed to generate lockfile for some reason
+///
+/// # Panics
+///
+/// This function does not panic
+///
 pub fn run(workspace: &impl Operations) -> Result<()> {
     let top_dir = workspace.top_dir();
     let operations = workspace.git();
