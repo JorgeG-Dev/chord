@@ -2,12 +2,12 @@ use crate::workspace::{GitOperations, LockedRepo, Lockfile, Manifest, Operations
 
 use anyhow::{Result, bail};
 use serde_saphyr;
-use std::collections::HashMap;
 use std::{fs::File, path::PathBuf};
 
-/// Attempts to sync the workspace to the lockfile. If no lockfile exists,
-/// falls back to the manifest file and creates a new lockfile. Clones (if
-/// necessary), fetches, and checks out the specified revision
+/// Performs the same process, as sync, key difference being that it does not
+/// use the lockfile. A new one will be generated each time this command is
+/// run. This is mainly used for updating repos that are pinned to a branch
+/// as opposed to a tag or commit hash.
 pub fn run(workspace: &impl Operations) -> Result<()> {
     let top_dir = workspace.top_dir();
     let operations = workspace.git();
@@ -21,30 +21,7 @@ pub fn run(workspace: &impl Operations) -> Result<()> {
     };
     let mut manifest: Manifest = serde_saphyr::from_reader(manifest_file)?;
 
-    // 2. Try to open the lockfile and get its contents
-    let locked_repos = match File::open(top_dir.join("chord.lock.yaml")) {
-        Ok(file) => {
-            let lockfile: Lockfile = serde_saphyr::from_reader(file)?;
-            let mut parsed_repos = HashMap::new();
-            for repo in lockfile.repos {
-                parsed_repos.insert(repo.name, repo.revision);
-            }
-            Some(parsed_repos)
-        }
-        Err(_) => None,
-    };
-
-    // 3. If a lockfile was actually parsed, go through the manifest, updating
-    // updating the revisions and location
-    if let Some(repos) = locked_repos {
-        for manifest_repo in &mut manifest.repos {
-            if let Some(revision) = repos.get(&manifest_repo.name) {
-                manifest_repo.revision = revision.clone();
-            }
-        }
-    }
-
-    // 4. Drain the manifest repos, perform sync operations, and create lockfile
+    // 2. Drain the manifest repos, perform update operations, and create lockfile
     // struct
     let mut lockfile_repos = vec![];
     for repo in manifest.repos.drain(..) {
@@ -65,11 +42,11 @@ pub fn run(workspace: &impl Operations) -> Result<()> {
         operations.checkout(&revision, &repo_dir)?;
         lockfile_repos.push(LockedRepo {
             name: repo.name,
-            revision: revision,
+            revision,
         });
     }
 
-    // 5. Create a lockfile out of the contents in the current manifest struct
+    // 3. Create a lockfile out of the contents in the current manifest struct
     let mut new_lockfile = File::create(top_dir.join("chord.lock.yaml"))?;
     let new_lockfile_contents = Lockfile {
         repos: lockfile_repos,
@@ -187,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sync_clones_if_repo_missing() {
+    fn test_update_clones_if_repo_missing() {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("chord.yaml"), default_manifest()).unwrap();
 
@@ -206,7 +183,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sync_creates_lockfile_if_missing() {
+    fn test_update_creates_lockfile_if_missing() {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("chord.yaml"), default_manifest()).unwrap();
 
@@ -223,7 +200,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sync_does_not_clone_if_exists() {
+    fn test_update_does_not_clone_if_exists() {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("chord.yaml"), default_manifest()).unwrap();
 
@@ -254,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn test_multi_sync_with_clone() {
+    fn test_multi_update_with_clone() {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("chord.yaml"), multi_repo_manifest()).unwrap();
 
@@ -273,7 +250,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sync_uses_lockfile_revision_if_exists() {
+    fn test_update_does_not_use_lockfile_revision_at_all() {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("chord.yaml"), default_manifest()).unwrap();
         fs::write(
@@ -290,16 +267,17 @@ repos:
             git: MockGitBackend::new(),
         };
         workspace.git.is_repo_return.set(false);
+        workspace
+            .git
+            .rev_as_hash_return
+            .set(String::from("11223344"));
 
         run(&workspace).unwrap();
-        assert_eq!(
-            "0123456789012345678901234567890123456789",
-            workspace.git.rev_as_hash_rev.take()
-        );
+        assert_eq!("main", workspace.git.rev_as_hash_rev.take());
     }
 
     #[test]
-    fn test_sync_with_empty_manifest() {
+    fn test_update_with_empty_manifest() {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("chord.yaml"), "repos: []").unwrap();
 
@@ -317,32 +295,7 @@ repos:
     }
 
     #[test]
-    fn test_sync_uses_manifest_revision_if_repo_not_in_lockfile() {
-        let dir = tempdir().unwrap();
-        fs::write(dir.path().join("chord.yaml"), default_manifest()).unwrap();
-        fs::write(
-            dir.path().join("chord.lock.yaml"),
-            r#"
-repos:
-  - name: dummy 
-    revision: 0123456789012345678901234567890123456789
-"#,
-        )
-        .unwrap();
-
-        let workspace = MockWorkspace {
-            top_dir: dir.path().to_path_buf(),
-            git: MockGitBackend::new(),
-        };
-        workspace.git.is_repo_return.set(false);
-
-        run(&workspace).unwrap();
-
-        assert_eq!("main", workspace.git.rev_as_hash_rev.take());
-    }
-
-    #[test]
-    fn test_sync_overwrites_lockfile_with_new_sha() {
+    fn test_update_overwrites_lockfile_with_new_sha() {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("chord.yaml"), default_manifest()).unwrap();
         fs::write(
