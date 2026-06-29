@@ -32,7 +32,7 @@ fn main() -> Result<()> {
                     commands::sync(&workspace)?;
                 }
                 Commands::Update => {
-                    println!("Updating the hashes for all repos pinned to branches")
+                    commands::update(&workspace)?;
                 }
                 Commands::Forall { command } => {
                     println!("Running command {:} across all repos", command);
