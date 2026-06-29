@@ -115,34 +115,33 @@ mod tests {
     }
 
     impl GitOperations for MockGitBackend {
+        #[allow(unused)]
         fn is_repo(&self, repo_dir: impl AsRef<std::path::Path>) -> bool {
-            repo_dir;
             self.is_repo_count.set(self.is_repo_count.get() + 1);
             self.is_repo_return.get()
         }
+
+        #[allow(unused)]
         fn rev_as_hash(&self, repo_dir: impl AsRef<std::path::Path>, rev: &str) -> Result<String> {
-            repo_dir;
             self.rev_as_hash_rev.set(String::from(rev));
             self.rev_as_hash_count.set(self.rev_as_hash_count.get() + 1);
             Ok(String::from("0123456789012345678901234567890123456789"))
         }
 
+        #[allow(unused)]
         fn clone_repo(&self, remote: &str, repo_dir: impl AsRef<std::path::Path>) -> Result<()> {
-            remote;
-            repo_dir;
             self.clone_count.set(self.clone_count.get() + 1);
             Ok(())
         }
 
+        #[allow(unused)]
         fn fetch(&self, repo_dir: impl AsRef<std::path::Path>) -> Result<()> {
-            repo_dir;
             self.fetch_count.set(self.fetch_count.get() + 1);
             Ok(())
         }
 
+        #[allow(unused)]
         fn checkout(&self, hash: &str, repo_dir: impl AsRef<std::path::Path>) -> Result<()> {
-            hash;
-            repo_dir;
             self.checkout_count.set(self.checkout_count.get() + 1);
             Ok(())
         }
