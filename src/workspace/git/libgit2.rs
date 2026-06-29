@@ -11,30 +11,36 @@ impl Operations for Git2Backend {
         Repository::open(repo_dir).is_ok()
     }
 
-    fn clone_repo(&self, remote: &str, repo_dir: impl AsRef<Path>) -> Result<()> {
-        Repository::clone(remote, repo_dir)?;
-        Ok(())
-    }
-
-    fn checkout(&self, rev: &str, repo_dir: impl AsRef<Path>) -> Result<()> {
+    fn rev_as_hash(&self, repo_dir: impl AsRef<Path>, rev: &str) -> Result<String> {
         let repo = Repository::open(repo_dir)?;
-
-        // 1. Try to parse a hash
-        //      a. Success, go to 3
-        //      b. Failed, go to 2
-        // 2. Try to find the matching reference using the standard refs format
-        // 3. Peel the object to a commit
-        // 4. Map that into an object
         let obj = repo.revparse_single(rev).or_else(|_| {
             repo.find_reference(&format!("refs/remotes/origin/{}", rev))
                 .and_then(|r| r.peel_to_commit())
                 .map(|c| c.into_object())
         })?;
+        Ok(obj
+            .id()
+            .as_bytes()
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect::<String>())
+    }
 
-        // 5. Checkout to commit
+    fn clone_repo(&self, remote: &str, repo_dir: impl AsRef<Path>) -> Result<()> {
+        Repository::clone(remote, repo_dir)?;
+        Ok(())
+    }
+
+    fn checkout(&self, hash: &str, repo_dir: impl AsRef<Path>) -> Result<()> {
+        let repo = Repository::open(repo_dir)?;
+
+        // 1. Try to parse a hash
+        let obj = repo.revparse_single(hash)?;
+
+        // 2. Checkout to commit
         repo.checkout_tree(&obj, None)?;
 
-        // 6. Set the deatched head at the commit
+        // 3. Set the deatched head at the commit
         repo.set_head_detached(obj.id())?;
 
         Ok(())
