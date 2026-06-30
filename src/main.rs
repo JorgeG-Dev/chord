@@ -29,7 +29,7 @@ fn main() -> Result<()> {
                     commands::update(&workspace)?;
                 }
                 Commands::Forall { command } => {
-                    println!("Running command {:} across all repos", command);
+                    commands::forall(command)?;
                 }
                 _ => unreachable!(),
             }
