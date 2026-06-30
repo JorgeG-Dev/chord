@@ -29,7 +29,7 @@ fn main() -> Result<()> {
                     commands::update(&workspace)?;
                 }
                 Commands::Forall { command } => {
-                    commands::forall(command)?;
+                    commands::forall(command, &workspace)?;
                 }
                 _ => unreachable!(),
             }
