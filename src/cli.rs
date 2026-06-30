@@ -30,7 +30,7 @@ pub enum Commands {
     /// Runs a user provided command in each repo in the chord workspace
     Forall {
         /// Command to run in each repo
-        #[arg(long)]
-        command: String,
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        command: Vec<String>,
     },
 }
