@@ -8,7 +8,7 @@ use cli::{Cli, Commands};
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    match args.command {
+    let result = match args.command {
         Commands::Init { path } => {
             commands::init(path)?;
         }
@@ -34,7 +34,7 @@ fn main() -> Result<()> {
                 _ => unreachable!(),
             }
         }
-    }
+    };
 
     Ok(())
 }
