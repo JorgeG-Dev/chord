@@ -19,10 +19,6 @@ pub enum Commands {
     },
     /// Checks the status of the chord workspace against the manifest
     Status,
-    /// Prints info about each repo in the chord workspace
-    List,
-    /// Runs git diff across all repos in the chord workspace
-    Diff,
     /// Prints the chord workspace root
     Topdir,
     /// Clones missing repos, fetches, and checks out to whatever is in the

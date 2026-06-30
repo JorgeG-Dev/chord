@@ -22,12 +22,6 @@ fn main() -> Result<()> {
                 Commands::Status => {
                     commands::status(&workspace)?;
                 }
-                Commands::List => {
-                    println!("Printing out info about each repo in the workspace")
-                }
-                Commands::Diff => {
-                    println!("Printing out the diff for each repo in the workspace")
-                }
                 Commands::Sync => {
                     commands::sync(&workspace)?;
                 }
