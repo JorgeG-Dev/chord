@@ -18,6 +18,7 @@ const DIRTY_TABLE_INDEX: usize = 2;
 /// not exist, just the disk status will be relevant.
 ///
 /// # Arguments
+/// `workspace` - An object that implements the workspace operations trait
 ///
 /// # Returns
 ///

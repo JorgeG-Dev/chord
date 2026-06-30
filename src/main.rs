@@ -22,12 +22,6 @@ fn main() -> Result<()> {
                 Commands::Status => {
                     commands::status(&workspace)?;
                 }
-                Commands::List => {
-                    println!("Printing out info about each repo in the workspace")
-                }
-                Commands::Diff => {
-                    println!("Printing out the diff for each repo in the workspace")
-                }
                 Commands::Sync => {
                     commands::sync(&workspace)?;
                 }
@@ -35,7 +29,7 @@ fn main() -> Result<()> {
                     commands::update(&workspace)?;
                 }
                 Commands::Forall { command } => {
-                    println!("Running command {:} across all repos", command);
+                    commands::forall(command, &workspace)?;
                 }
                 _ => unreachable!(),
             }
