@@ -9,28 +9,16 @@ use cli::{Cli, Commands};
 fn main() -> Result<()> {
     let args = Cli::parse();
     let result = match args.command {
-        Commands::Init { path } => {
-            commands::init(path)?;
-        }
-        Commands::Topdir => {
-            commands::topdir()?;
-        }
+        Commands::Init { path } => commands::init(path)?,
+        Commands::Topdir => commands::topdir()?,
         _ => {
             let backend = workspace::GitBackend;
             let workspace = workspace::Workspace::new(backend)?;
             match args.command {
-                Commands::Status => {
-                    commands::status(&workspace)?;
-                }
-                Commands::Sync => {
-                    commands::sync(&workspace)?;
-                }
-                Commands::Update => {
-                    commands::update(&workspace)?;
-                }
-                Commands::Forall { command } => {
-                    commands::forall(command, &workspace)?;
-                }
+                Commands::Status => commands::status(&workspace)?,
+                Commands::Sync => commands::sync(&workspace)?,
+                Commands::Update => commands::update(&workspace)?,
+                Commands::Forall { command } => commands::forall(command, &workspace)?,
                 _ => unreachable!(),
             }
         }
