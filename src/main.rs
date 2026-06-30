@@ -20,7 +20,7 @@ fn main() -> Result<()> {
             let workspace = workspace::Workspace::new(backend)?;
             match args.command {
                 Commands::Status => {
-                    println!("Getting status of workspace")
+                    commands::status(&workspace)?;
                 }
                 Commands::List => {
                     println!("Printing out info about each repo in the workspace")

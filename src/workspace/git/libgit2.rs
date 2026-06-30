@@ -11,6 +11,24 @@ impl Operations for Git2Backend {
         Repository::open(repo_dir).is_ok()
     }
 
+    fn is_dirty(&self, repo_dir: impl AsRef<Path>) -> Result<bool> {
+        let repo = Repository::open(repo_dir)?;
+        let statuses = repo.statuses(None)?;
+        Ok(!statuses.is_empty())
+    }
+
+    fn get_current_hash(&self, repo_dir: impl AsRef<Path>) -> Result<String> {
+        let repo = Repository::open(repo_dir)?;
+        let head = repo.head()?;
+        let obj = head.peel_to_commit().map(|c| c.into_object())?;
+        Ok(obj
+            .id()
+            .as_bytes()
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect::<String>())
+    }
+
     fn rev_as_hash(&self, repo_dir: impl AsRef<Path>, rev: &str) -> Result<String> {
         let repo = Repository::open(repo_dir)?;
         let obj = repo.revparse_single(rev).or_else(|_| {
