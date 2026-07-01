@@ -39,13 +39,7 @@ pub fn run(workspace: &impl Operations) -> Result<()> {
     let operations = workspace.git();
 
     // 1. Open and parse the manifest file
-    let manifest_file = match File::open(top_dir.join("chord.yaml")) {
-        Ok(file) => file,
-        Err(_) => {
-            bail!("Failed to open Chord manifest")
-        }
-    };
-    let mut manifest: Manifest = serde_saphyr::from_reader(manifest_file)?;
+    let mut manifest = Manifest::read(&top_dir);
 
     // 2. Try to open the lockfile and get its contents
     let mut locked_repos = HashMap::new();

@@ -34,13 +34,7 @@ pub fn run(command: Vec<String>, workspace: &impl Operations) -> Result<()> {
     let operations = workspace.git();
 
     // 1. Open and parse the manifest file
-    let manifest_file = match File::open(top_dir.join("chord.yaml")) {
-        Ok(file) => file,
-        Err(_) => {
-            bail!("failed to open manifest")
-        }
-    };
-    let mut manifest: Manifest = serde_saphyr::from_reader(manifest_file)?;
+    let mut manifest = Manifest::read(&top_dir)?;
 
     // 2. Create the command string
     let command_str = command.join(" ");
