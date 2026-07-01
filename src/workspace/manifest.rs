@@ -32,7 +32,7 @@ pub struct Repo {
 
 impl Manifest {
     /// Opens and deserializes the manifest file into a Manifest struct.
-    pub fn read(top_dir: &impl AsRef<Path>) -> Result<Self> {
+    pub fn read(top_dir: impl AsRef<Path>) -> Result<Self> {
         let manifest_file =
             File::open(top_dir.as_ref().join("chord.yaml")).context("failed to open manifest")?;
         let manifest =
