@@ -13,8 +13,8 @@ pub fn run(workspace: Workspace) -> Result<()> {
     // 2. Drain the manifest repos, perform update operations, and create lockfile
     // struct
     let mut new_lockfile = Lockfile::new();
-    for repo in manifest.repos.drain(..) {
-        let repo = workspace.resolve_repo(repo)?;
+    for mut repo in manifest.repos.drain(..) {
+        workspace.resolve_repo(&mut repo)?;
         new_lockfile.insert(repo.name, repo.revision);
     }
 
