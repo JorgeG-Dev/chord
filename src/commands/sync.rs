@@ -45,7 +45,7 @@ pub fn run(workspace: &impl Operations) -> Result<()> {
         operations.fetch(&repo_dir)?;
         let revision = operations.rev_as_hash(&repo_dir, &repo.revision)?;
         operations.checkout(&revision, &repo_dir)?;
-        new_lockfile.insert(repo.name, repo.revision);
+        new_lockfile.insert(repo.name, revision);
     }
 
     // 5. Write the new lockfile to disk
