@@ -42,7 +42,14 @@ pub fn run(workspace: Workspace) -> Result<()> {
                 continue;
             }
         };
-        let (is_locked, is_dirty) = workspace.repo_status(&repo, current_rev.as_str())?;
+        let (is_locked, is_dirty) = match workspace.repo_status(&repo, current_rev.as_str()) {
+            Ok(value) => value,
+            Err(e) => {
+                println!("error occurred getting the status of {}: {}", repo.name, e);
+                table.add_row(table_entry);
+                continue;
+            }
+        };
         table_entry[STATUS_TABLE_INDEX] = match is_locked {
             true => "locked",
             false => "mismatch",
