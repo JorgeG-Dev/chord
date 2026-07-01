@@ -1,11 +1,8 @@
 //! Contains the logic for performing the Status command
-use crate::workspace::{GitOperations, Lockfile, Manifest, Operations};
+use crate::workspace::{Lockfile, Manifest, Workspace};
 
 use anyhow::Result;
 use comfy_table::{Table, modifiers::UTF8_ROUND_CORNERS, presets::UTF8_FULL};
-use serde_saphyr;
-use std::collections::HashMap;
-use std::{fs::File, path::PathBuf};
 
 const STATUS_TABLE_INDEX: usize = 1;
 const DIRTY_TABLE_INDEX: usize = 2;
@@ -13,23 +10,20 @@ const DIRTY_TABLE_INDEX: usize = 2;
 /// Goes through all the repos in the manifest and determines if they
 /// are currently checked out to the revision specified in the lockfile
 /// and if they are dirty or not.
-pub fn run(workspace: &impl Operations) -> Result<()> {
-    let top_dir = workspace.top_dir();
-    let operations = workspace.git();
-
+pub fn run(workspace: Workspace) -> Result<()> {
     // 1. Open and parse the manifest file
-    let mut manifest = Manifest::read(&top_dir)?;
+    let mut manifest = Manifest::read(workspace.top_dir())?;
 
     // 2. Try to open the lockfile and get its contents
-    let mut locked_repos = HashMap::new();
-    if let Ok(file) = File::open(top_dir.join("chord.lock.yaml")) {
-        let lockfile: Lockfile = serde_saphyr::from_reader(file)?;
-        for repo in lockfile.repos {
-            locked_repos.insert(repo.name, repo.revision);
+    let lockfile = match Lockfile::read(workspace.top_dir()) {
+        Ok(lockfile) => lockfile,
+        Err(_) => {
+            println!(
+                "no lockfile exists, run `chord sync` or `chord update` to generate a new one"
+            );
+            Lockfile::new()
         }
-    } else {
-        println!("No lockfile exists, run `chord sync` or `chord update` to generate a new one");
-    }
+    };
 
     // 3. Create table object
     let mut table = Table::new();
@@ -40,33 +34,23 @@ pub fn run(workspace: &impl Operations) -> Result<()> {
 
     // 4. Iterate through the manifest, creating the table
     for repo in manifest.repos.drain(..) {
-        let mut table_entry = vec![repo.name.as_str(), "unavailable", "unknown"];
-        let location = repo
-            .location
-            .as_ref()
-            .map(|l| top_dir.join(l))
-            .unwrap_or_else(|| top_dir.to_path_buf());
-        let repo_dir = PathBuf::from(&top_dir)
-            .join(location)
-            .join(repo.name.as_str());
-
-        if operations.is_repo(&repo_dir) {
-            table_entry[STATUS_TABLE_INDEX] = "mismatch";
-            let current_head = operations.get_current_hash(&repo_dir)?;
-            if let Some(locked_rev) = locked_repos.get(&repo.name) {
-                if locked_rev.as_str() == current_head.as_str() {
-                    table_entry[STATUS_TABLE_INDEX] = "locked";
-                }
+        let mut table_entry = vec![&repo.name, "unavailable", "unknown"];
+        let current_rev = match lockfile.get(repo.name.as_str()) {
+            Some(value) => value,
+            None => {
+                table.add_row(table_entry);
+                continue;
             }
-
-            if let Ok(dirty) = operations.is_dirty(&repo_dir) {
-                if !dirty {
-                    table_entry[DIRTY_TABLE_INDEX] = "no"
-                } else {
-                    table_entry[DIRTY_TABLE_INDEX] = "yes"
-                }
-            }
-        }
+        };
+        let (is_locked, is_dirty) = workspace.repo_status(&repo, current_rev.as_str())?;
+        table_entry[STATUS_TABLE_INDEX] = match is_locked {
+            true => "locked",
+            false => "mismatch",
+        };
+        table_entry[DIRTY_TABLE_INDEX] = match is_dirty {
+            true => "yes",
+            false => "no",
+        };
         table.add_row(table_entry);
     }
 
