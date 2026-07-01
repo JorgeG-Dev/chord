@@ -1,23 +1,20 @@
 //! Contains the logic for performing the Sync command
 use crate::workspace::{GitOperations, LockedRepo, Lockfile, Manifest, Operations};
 
-use anyhow::{Result, bail};
+use anyhow::Result;
 use serde_saphyr;
 use std::collections::HashMap;
 use std::{fs::File, path::PathBuf};
 
+/// Attempts to parse the manifest file and sync it to the revisions outlined
+/// in the lockfile, if it exists. If not, a new lockfile is created and each
+/// successfully synced repo is pinned to a revision there.
 pub fn run(workspace: &impl Operations) -> Result<()> {
     let top_dir = workspace.top_dir();
     let operations = workspace.git();
 
     // 1. Open and parse the manifest file
-    let manifest_file = match File::open(top_dir.join("chord.yaml")) {
-        Ok(file) => file,
-        Err(_) => {
-            bail!("Failed to open Chord manifest")
-        }
-    };
-    let mut manifest: Manifest = serde_saphyr::from_reader(manifest_file)?;
+    let mut manifest = Manifest::read(&top_dir)?;
 
     // 2. Try to open the lockfile and get its contents
     let locked_repos = match File::open(top_dir.join("chord.lock.yaml")) {
