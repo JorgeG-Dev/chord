@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 mod git;
@@ -9,7 +9,6 @@ pub mod utils;
 pub use git::GitBackend;
 pub use git::Operations as GitOperations;
 pub use lockfile::Lockfile;
-pub use lockfile::Repo as LockedRepo;
 pub use manifest::Manifest;
 pub use manifest::Repo as ManifestRepo;
 
@@ -22,30 +21,31 @@ pub struct Workspace {
     backend: GitBackend,
 }
 
-/// The operations that can be performed by a Workspace struct
-pub trait Operations {
-    /// Gets the workspace's top directory where the manifest is located
-    fn top_dir(&self) -> &Path;
-    /// Gets the backend used for all git related operations
-    fn git(&self) -> &impl GitOperations;
-}
+impl Workspace {
+    pub fn new(top_dir: PathBuf, backend: GitBackend) -> Self {
+        Self { top_dir, backend }
+    }
 
-impl Operations for Workspace {
-    fn top_dir(&self) -> &Path {
+    pub fn get_top_dir(&self) -> &Path {
         &self.top_dir
     }
 
-    fn git(&self) -> &impl GitOperations {
-        &self.backend
-    }
-}
+    pub fn sync(&self, mut repo: ManifestRepo) -> Result<ManifestRepo> {
+        let location = repo
+            .location
+            .as_ref()
+            .map(|l| self.top_dir.join(l))
+            .unwrap_or_else(|| self.top_dir.to_path_buf());
+        let repo_dir = PathBuf::from(&self.top_dir)
+            .join(location)
+            .join(repo.name.as_str());
 
-impl Workspace {
-    pub fn new(backend: GitBackend) -> Result<Self> {
-        let top_dir = match utils::get_top_dir() {
-            Some(dir) => dir,
-            None => bail!("Not within a Chord workspace"),
-        };
-        Ok(Self { top_dir, backend })
+        if !self.backend.is_repo(&repo_dir) {
+            self.backend.clone_repo(&repo.remote, &repo_dir)?;
+        }
+        self.backend.fetch(&repo_dir)?;
+        repo.revision = self.backend.rev_as_hash(&repo_dir, &repo.revision)?;
+        self.backend.checkout(&repo.revision, &repo_dir)?;
+        Ok(repo)
     }
 }
