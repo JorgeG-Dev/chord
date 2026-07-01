@@ -9,7 +9,7 @@ pub fn run() -> Result<()> {
     if let Some(dir) = utils::get_top_dir() {
         println!("{}", dir.display());
     } else {
-        println!("Not within a Chord workspace");
+        println!("not within a workspace");
     }
     Ok(())
 }
