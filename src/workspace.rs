@@ -26,19 +26,18 @@ impl Workspace {
         Self { top_dir, backend }
     }
 
-    pub fn get_top_dir(&self) -> &Path {
+    /// Returns a reference to the workspace's top directory.
+    pub fn top_dir(&self) -> &Path {
         &self.top_dir
     }
 
-    pub fn sync(&self, mut repo: ManifestRepo) -> Result<ManifestRepo> {
-        let location = repo
-            .location
-            .as_ref()
-            .map(|l| self.top_dir.join(l))
-            .unwrap_or_else(|| self.top_dir.to_path_buf());
-        let repo_dir = PathBuf::from(&self.top_dir)
-            .join(location)
-            .join(repo.name.as_str());
+    /// Resolves the specified repo to the revision specified in its manifest
+    /// entry
+    pub fn resolve_repo(&self, mut repo: ManifestRepo) -> Result<ManifestRepo> {
+        let repo_dir = match &repo.location {
+            Some(location) => self.top_dir.join(location).join(&repo.name),
+            None => self.top_dir.join(&repo.name),
+        };
 
         if !self.backend.is_repo(&repo_dir) {
             self.backend.clone_repo(&repo.remote, &repo_dir)?;
