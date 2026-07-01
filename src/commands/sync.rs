@@ -153,15 +153,7 @@ mod tests {
     fn test_sync_uses_lockfile_revision_if_exists() {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("chord.yaml"), default_manifest()).unwrap();
-        fs::write(
-            dir.path().join("chord.lock.yaml"),
-            r#"
-repos:
-  - name: chord
-    revision: 0123456789012345678901234567890123456789
-"#,
-        )
-        .unwrap();
+        fs::write(dir.path().join("chord.lock.yaml"), default_lockfile()).unwrap();
         let workspace = MockWorkspace {
             top_dir: dir.path().to_path_buf(),
             git: MockGitBackend::new(),
@@ -197,15 +189,7 @@ repos:
     fn test_sync_uses_manifest_revision_if_repo_not_in_lockfile() {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("chord.yaml"), default_manifest()).unwrap();
-        fs::write(
-            dir.path().join("chord.lock.yaml"),
-            r#"
-repos:
-  - name: dummy 
-    revision: 0123456789012345678901234567890123456789
-"#,
-        )
-        .unwrap();
+        fs::write(dir.path().join("chord.lock.yaml"), default_lockfile()).unwrap();
 
         let workspace = MockWorkspace {
             top_dir: dir.path().to_path_buf(),
@@ -222,15 +206,7 @@ repos:
     fn test_sync_overwrites_lockfile_with_new_sha() {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("chord.yaml"), default_manifest()).unwrap();
-        fs::write(
-            dir.path().join("chord.lock.yaml"),
-            r#"
-repos:
-  - name: chord
-    revision: 0123456789012345678901234567890123456789
-"#,
-        )
-        .unwrap();
+        fs::write(dir.path().join("chord.lock.yaml"), default_lockfile()).unwrap();
 
         let workspace = MockWorkspace {
             top_dir: dir.path().to_path_buf(),
@@ -245,7 +221,6 @@ repos:
         run(&workspace).unwrap();
 
         let lockfile_contents = fs::read_to_string(dir.path().join("chord.lock.yaml")).unwrap();
-        println!("{:?}", lockfile_contents);
         assert!(lockfile_contents.contains("11223344"));
     }
 }
