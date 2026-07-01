@@ -1,11 +1,8 @@
-mod cli;
-mod commands;
-mod workspace;
-
 use anyhow::{Result, anyhow};
+use chord_ws::cli::{Cli, Commands};
+use chord_ws::commands;
+use chord_ws::workspace::{GitBackend, Workspace, utils};
 use clap::Parser;
-use cli::{Cli, Commands};
-use workspace::{GitBackend, Workspace, utils};
 
 fn main() -> Result<()> {
     let args = Cli::parse();
