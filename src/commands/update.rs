@@ -8,17 +8,17 @@ use anyhow::Result;
 /// completion.
 pub fn run(workspace: Workspace) -> Result<()> {
     // 1. Open and parse the manifest file
-    let mut manifest = Manifest::read(workspace.get_top_dir())?;
+    let mut manifest = Manifest::read(workspace.top_dir())?;
 
     // 2. Drain the manifest repos, perform update operations, and create lockfile
     // struct
     let mut new_lockfile = Lockfile::new();
     for repo in manifest.repos.drain(..) {
-        let repo = workspace.sync(repo)?;
+        let repo = workspace.resolve_repo(repo)?;
         new_lockfile.insert(repo.name, repo.revision);
     }
 
     // 3. Write the new lockfile to disk
-    new_lockfile.write(workspace.get_top_dir())?;
+    new_lockfile.write(workspace.top_dir())?;
     Ok(())
 }
