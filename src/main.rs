@@ -21,7 +21,7 @@ fn main() -> Result<()> {
                     Commands::Status => commands::status(workspace),
                     Commands::Sync => commands::sync(workspace),
                     Commands::Update => commands::update(workspace),
-                    Commands::Forall { command } => commands::forall(command, &workspace),
+                    Commands::Forall { command } => commands::forall(command, workspace),
                     _ => unreachable!(),
                 }
             }
