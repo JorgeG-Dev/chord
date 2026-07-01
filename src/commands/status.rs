@@ -39,7 +39,7 @@ pub fn run(workspace: &impl Operations) -> Result<()> {
     let operations = workspace.git();
 
     // 1. Open and parse the manifest file
-    let mut manifest = Manifest::read(&top_dir);
+    let mut manifest = Manifest::read(&top_dir)?;
 
     // 2. Try to open the lockfile and get its contents
     let mut locked_repos = HashMap::new();
