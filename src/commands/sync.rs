@@ -159,11 +159,15 @@ mod tests {
             git: MockGitBackend::new(),
         };
         workspace.git.is_repo_return.set(false);
+        workspace
+            .git
+            .rev_as_hash_return
+            .set(String::from("0123456789012345678901234567890123456789"));
 
         run(&workspace).unwrap();
         assert_eq!(
             "0123456789012345678901234567890123456789",
-            workspace.git.rev_as_hash_rev.take()
+            workspace.git.checkout_hash.take()
         );
     }
 
