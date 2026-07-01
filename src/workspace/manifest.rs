@@ -1,3 +1,4 @@
+use super::lockfile::Lockfile;
 use anyhow::{Context, Result};
 use std::fs::File;
 use std::path::{Path, PathBuf};
@@ -30,11 +31,23 @@ pub struct Repo {
 }
 
 impl Manifest {
+    /// Opens and deserializes the manifest file into a Manifest struct.
     pub fn read(top_dir: &impl AsRef<Path>) -> Result<Self> {
         let manifest_file =
             File::open(top_dir.as_ref().join("chord.yaml")).context("failed to open manifest")?;
         let manifest =
             serde_saphyr::from_reader(manifest_file).context("failed to parse manifest")?;
         Ok(manifest)
+    }
+
+    /// Updates the manifest with the revisions in the lockfile. This is a
+    /// destructive action, meaning the lockfile gets emptied out into the
+    /// manifest.
+    pub fn apply_lock(&mut self, lockfile: &mut Lockfile) {
+        for repo in &mut self.repos {
+            if let Some(revision) = lockfile.remove(&repo.name) {
+                repo.revision = revision;
+            }
+        }
     }
 }
