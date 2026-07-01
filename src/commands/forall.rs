@@ -1,34 +1,14 @@
 //! Contains the logic for performing the Forall command
 use anyhow::{Result, bail};
 use colored::Colorize;
-use std::fs::File;
 use std::path::PathBuf;
 use std::process::Command;
 
 use crate::workspace::{GitOperations, Manifest, Operations};
 
-/// Runs the Chord workspace forall process
-///
-/// Goes through all the repos in the manifest and checks if they exist
-/// on disk and runs the specified command in each repo
-///
-/// # Arguments
-/// `command` - The command to run in each repo
-/// `workspace` - An object that implements the workspace operations trait
-///
-/// # Returns
-///
-/// Returns Ok on successful of workspace, Err if the command being run
-/// in the repo fails for any reason.
-///
-/// # Errors
-///
-/// No errors are returned from this function
-///
-/// # Panics
-///
-/// This function does not panic
-///
+/// Parses the manifest, ensures each repo is valid, goes into each
+/// repo and executes the specified command. Output of each command
+/// execution is displayed to stdout.
 pub fn run(command: Vec<String>, workspace: &impl Operations) -> Result<()> {
     let top_dir = workspace.top_dir();
     let operations = workspace.git();
