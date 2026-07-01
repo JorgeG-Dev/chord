@@ -1,55 +1,19 @@
 //! Contains the logic for performing the Update command
 use crate::workspace::{GitOperations, LockedRepo, Lockfile, Manifest, Operations};
 
-use anyhow::{Result, bail};
+use anyhow::Result;
 use serde_saphyr;
 use std::{fs::File, path::PathBuf};
 
-/// Runs the Chord workspace update process
-///
-/// Attempts to update the Chord workspace to the lockfile versions by doing the following:
-///
-/// 1. Clone the repo (if not already on the filesystem)
-/// 2. Fetch the repo from the remote
-/// 3. Checkout the repo to the specified revision
-///
-/// Unlike the `sync` command, the `update` command uses the manifest file as
-/// the source of the revisions always. Any repos pinned to refs (branches/tags)
-/// will be updated if there's a newer revision available. Repos pinned to
-/// hashes will not be affected. New lockfile is also generated.
-///
-/// # Arguments
-/// `workspace` - An object that implements the workspace operations trait
-///
-/// # Returns
-///
-/// Returns Ok on successful syncing of workspace, Err if sync fails for any
-/// reason.
-///
-/// # Errors
-///
-/// No specific error values are returned, but the command can fail for the
-/// following reasons:
-/// 1. Can't open manifest file
-/// 2. One of the git operations fails
-/// 3. Failed to generate lockfile for some reason
-///
-/// # Panics
-///
-/// This function does not panic
-///
+/// Syncs the repos in the manifest to the revisions specified in
+/// the manifest, ignoring the lockfile. Generates a new file after
+/// completion.
 pub fn run(workspace: &impl Operations) -> Result<()> {
     let top_dir = workspace.top_dir();
     let operations = workspace.git();
 
     // 1. Open and parse the manifest file
-    let manifest_file = match File::open(top_dir.join("chord.yaml")) {
-        Ok(file) => file,
-        Err(_) => {
-            bail!("Failed to open Chord manifest")
-        }
-    };
-    let mut manifest: Manifest = serde_saphyr::from_reader(manifest_file)?;
+    let mut manifest = Manifest::read(&top_dir)?;
 
     // 2. Drain the manifest repos, perform update operations, and create lockfile
     // struct

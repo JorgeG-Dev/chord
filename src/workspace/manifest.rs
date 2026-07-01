@@ -1,4 +1,6 @@
-use std::path::PathBuf;
+use anyhow::{Context, Result};
+use std::fs::File;
+use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
@@ -25,4 +27,14 @@ pub struct Repo {
     /// The directory to clone the repo to, defaults to the directory where
     /// the Chord manifest is located.
     pub location: Option<PathBuf>,
+}
+
+impl Manifest {
+    pub fn read(top_dir: &impl AsRef<Path>) -> Result<Self> {
+        let manifest_file =
+            File::open(top_dir.as_ref().join("chord.yaml")).context("failed to open manifest")?;
+        let manifest =
+            serde_saphyr::from_reader(manifest_file).context("failed to parse manifest")?;
+        Ok(manifest)
+    }
 }

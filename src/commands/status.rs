@@ -1,7 +1,7 @@
 //! Contains the logic for performing the Status command
 use crate::workspace::{GitOperations, Lockfile, Manifest, Operations};
 
-use anyhow::{Result, bail};
+use anyhow::Result;
 use comfy_table::{Table, modifiers::UTF8_ROUND_CORNERS, presets::UTF8_FULL};
 use serde_saphyr;
 use std::collections::HashMap;
@@ -10,42 +10,15 @@ use std::{fs::File, path::PathBuf};
 const STATUS_TABLE_INDEX: usize = 1;
 const DIRTY_TABLE_INDEX: usize = 2;
 
-/// Runs the Chord workspace status process
-///
-/// Goes through all the repos in the manifest and checks if they exist
-/// on disk and if are checked out to the correct revision. The revision
-/// specified in the lockfile is the source of truth. If the lockfile does
-/// not exist, just the disk status will be relevant.
-///
-/// # Arguments
-/// `workspace` - An object that implements the workspace operations trait
-///
-/// # Returns
-///
-/// Always returns Ok, the output printed to stdout varies based on the state
-/// of the workspace, but the general structure involves the repo name, disk
-/// status, and revision status in a tabulated form.
-///
-/// # Errors
-///
-/// No errors are returned from this function
-///
-/// # Panics
-///
-/// This function does not panic
-///
+/// Goes through all the repos in the manifest and determines if they
+/// are currently checked out to the revision specified in the lockfile
+/// and if they are dirty or not.
 pub fn run(workspace: &impl Operations) -> Result<()> {
     let top_dir = workspace.top_dir();
     let operations = workspace.git();
 
     // 1. Open and parse the manifest file
-    let manifest_file = match File::open(top_dir.join("chord.yaml")) {
-        Ok(file) => file,
-        Err(_) => {
-            bail!("Failed to open Chord manifest")
-        }
-    };
-    let mut manifest: Manifest = serde_saphyr::from_reader(manifest_file)?;
+    let mut manifest = Manifest::read(&top_dir)?;
 
     // 2. Try to open the lockfile and get its contents
     let mut locked_repos = HashMap::new();
