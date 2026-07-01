@@ -1,21 +1,17 @@
 //! Contains the logic for performing the Sync command
-use crate::workspace::{GitOperations, Lockfile, Manifest, Operations};
+use crate::workspace::{Lockfile, Manifest, Workspace};
 
 use anyhow::Result;
-use std::path::PathBuf;
 
 /// Attempts to parse the manifest file and sync it to the revisions outlined
 /// in the lockfile, if it exists. If not, a new lockfile is created and each
 /// successfully synced repo is pinned to a revision there.
-pub fn run(workspace: &impl Operations) -> Result<()> {
-    let top_dir = workspace.top_dir();
-    let operations = workspace.git();
-
+pub fn run(workspace: Workspace) -> Result<()> {
     // 1. Open and parse the manifest file
-    let mut manifest = Manifest::read(&top_dir)?;
+    let mut manifest = Manifest::read(workspace.get_top_dir())?;
 
     // 2. Try to open the lockfile and get its contents
-    let lockfile = match Lockfile::read("chord.lock.yaml") {
+    let lockfile = match Lockfile::read(workspace.get_top_dir()) {
         Ok(lockfile) => Some(lockfile),
         Err(_) => None,
     };
@@ -30,26 +26,12 @@ pub fn run(workspace: &impl Operations) -> Result<()> {
     // struct
     let mut new_lockfile = Lockfile::new();
     for repo in manifest.repos.drain(..) {
-        let location = repo
-            .location
-            .as_ref()
-            .map(|l| top_dir.join(l))
-            .unwrap_or_else(|| top_dir.to_path_buf());
-        let repo_dir = PathBuf::from(&top_dir)
-            .join(location)
-            .join(repo.name.as_str());
-
-        if !operations.is_repo(&repo_dir) {
-            operations.clone_repo(&repo.remote, &repo_dir)?;
-        }
-        operations.fetch(&repo_dir)?;
-        let revision = operations.rev_as_hash(&repo_dir, &repo.revision)?;
-        operations.checkout(&revision, &repo_dir)?;
-        new_lockfile.insert(repo.name, revision);
+        let repo = workspace.sync(repo)?;
+        new_lockfile.insert(repo.name, repo.revision);
     }
 
     // 5. Write the new lockfile to disk
-    new_lockfile.write(top_dir)?;
+    new_lockfile.write(workspace.get_top_dir())?;
 
     Ok(())
 }
