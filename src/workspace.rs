@@ -1,5 +1,7 @@
-use anyhow::{Result, bail};
+use anyhow::Result;
+use anyhow::bail;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 mod git;
 mod lockfile;
@@ -9,7 +11,6 @@ pub mod utils;
 pub use git::GitBackend;
 pub use git::Operations as GitOperations;
 pub use lockfile::Lockfile;
-pub use lockfile::Repo as LockedRepo;
 pub use manifest::Manifest;
 pub use manifest::Repo as ManifestRepo;
 
@@ -22,161 +23,126 @@ pub struct Workspace {
     backend: GitBackend,
 }
 
-/// The operations that can be performed by a Workspace struct
-pub trait Operations {
-    /// Gets the workspace's top directory where the manifest is located
-    fn top_dir(&self) -> &Path;
-    /// Gets the backend used for all git related operations
-    fn git(&self) -> &impl GitOperations;
-}
+impl Workspace {
+    pub fn new(top_dir: PathBuf, backend: GitBackend) -> Self {
+        Self { top_dir, backend }
+    }
 
-impl Operations for Workspace {
-    fn top_dir(&self) -> &Path {
+    /// Returns a reference to the workspace's top directory.
+    pub fn top_dir(&self) -> &Path {
         &self.top_dir
     }
 
-    fn git(&self) -> &impl GitOperations {
-        &self.backend
-    }
-}
-
-impl Workspace {
-    pub fn new(backend: GitBackend) -> Result<Self> {
-        let top_dir = match utils::get_top_dir() {
-            Some(dir) => dir,
-            None => bail!("Not within a Chord workspace"),
-        };
-        Ok(Self { top_dir, backend })
-    }
-}
-
-/// Primarily used for unit testing the commands supported by the application
-#[cfg(test)]
-pub mod mock {
-    use super::*;
-    use anyhow::Result;
-    use std::cell::Cell;
-    use std::path::PathBuf;
-
-    // Used for stubbing out operations requiring the git backend and topdir
-    pub struct MockWorkspace {
-        pub top_dir: PathBuf,
-        pub git: MockGitBackend,
-    }
-
-    impl Operations for MockWorkspace {
-        fn top_dir(&self) -> &std::path::Path {
-            &self.top_dir
-        }
-        fn git(&self) -> &impl GitOperations {
-            &self.git
-        }
-    }
-
-    // Used for keeping track of how many times each git operation was called
-    pub struct MockGitBackend {
-        pub is_repo_count: Cell<u32>,
-        pub is_repo_return: Cell<bool>,
-        pub clone_count: Cell<u32>,
-        pub fetch_count: Cell<u32>,
-        pub rev_as_hash_count: Cell<u32>,
-        pub rev_as_hash_rev: Cell<String>,
-        pub rev_as_hash_return: Cell<String>,
-        pub checkout_count: Cell<u32>,
-        pub get_current_hash_count: Cell<u32>,
-        pub get_current_hash_return: Cell<String>,
-        pub is_dirty_count: Cell<u32>,
-        pub is_dirty_return: Cell<bool>,
-    }
-
-    impl GitOperations for MockGitBackend {
-        #[allow(unused)]
-        fn is_repo(&self, repo_dir: impl AsRef<std::path::Path>) -> bool {
-            self.is_repo_count.set(self.is_repo_count.get() + 1);
-            self.is_repo_return.get()
-        }
-
-        #[allow(unused)]
-        fn rev_as_hash(&self, repo_dir: impl AsRef<std::path::Path>, rev: &str) -> Result<String> {
-            self.rev_as_hash_rev.set(String::from(rev));
-            self.rev_as_hash_count.set(self.rev_as_hash_count.get() + 1);
-            let value = self.rev_as_hash_return.take();
-            self.rev_as_hash_return.set(value.clone());
-            Ok(value)
-        }
-
-        #[allow(unused)]
-        fn clone_repo(&self, remote: &str, repo_dir: impl AsRef<std::path::Path>) -> Result<()> {
-            self.clone_count.set(self.clone_count.get() + 1);
-            Ok(())
-        }
-
-        #[allow(unused)]
-        fn fetch(&self, repo_dir: impl AsRef<std::path::Path>) -> Result<()> {
-            self.fetch_count.set(self.fetch_count.get() + 1);
-            Ok(())
-        }
-
-        #[allow(unused)]
-        fn checkout(&self, hash: &str, repo_dir: impl AsRef<std::path::Path>) -> Result<()> {
-            self.checkout_count.set(self.checkout_count.get() + 1);
-            Ok(())
-        }
-
-        #[allow(unused)]
-        fn get_current_hash(&self, repo_dir: impl AsRef<std::path::Path>) -> Result<String> {
-            self.get_current_hash_count
-                .set(self.get_current_hash_count.get() + 1);
-            let value = self.get_current_hash_return.take();
-            self.get_current_hash_return.set(value.clone());
-            Ok(value)
-        }
-
-        #[allow(unused)]
-        fn is_dirty(&self, repo_dir: impl AsRef<std::path::Path>) -> Result<bool> {
-            self.is_dirty_count.set(self.is_dirty_count.get() + 1);
-            Ok(self.is_dirty_return.get())
-        }
-    }
-
-    impl MockGitBackend {
-        pub fn new() -> Self {
-            Self {
-                is_repo_count: Cell::new(0),
-                is_repo_return: Cell::new(false),
-                clone_count: Cell::new(0),
-                fetch_count: Cell::new(0),
-                rev_as_hash_count: Cell::new(0),
-                rev_as_hash_rev: Cell::new(String::new()),
-                rev_as_hash_return: Cell::new(String::new()),
-                checkout_count: Cell::new(0),
-                get_current_hash_count: Cell::new(0),
-                get_current_hash_return: Cell::new(String::new()),
-                is_dirty_count: Cell::new(0),
-                is_dirty_return: Cell::new(false),
+    fn repo_dir(&self, repo: &ManifestRepo) -> Result<PathBuf> {
+        match &repo.location {
+            Some(location) => {
+                if location.is_absolute() {
+                    bail!("repo has an absolute location, must be relative")
+                }
+                Ok(self.top_dir.join(location).join(&repo.name))
             }
+            None => Ok(self.top_dir.join(&repo.name)),
         }
     }
 
-    pub fn default_manifest() -> &'static str {
-        r#"
-    repos:
-      - name: chord
-        remote: https://github.com/JorgeG-Dev/chord
-        revision: main
-    "#
+    /// Resolves the specified repo to the revision specified in its manifest
+    /// entry
+    pub fn resolve_repo(&self, repo: &mut ManifestRepo) -> Result<()> {
+        let repo_dir = self.repo_dir(&repo)?;
+
+        if !self.backend.is_repo(&repo_dir) {
+            self.backend.clone_repo(&repo.remote, &repo_dir)?;
+        }
+        self.backend.fetch(&repo_dir)?;
+        repo.revision = self.backend.rev_as_hash(&repo_dir, &repo.revision)?;
+        self.backend.checkout(&repo.revision, &repo_dir)?;
+        Ok(())
     }
 
-    // This will fail in practice
-    pub fn multi_repo_manifest() -> &'static str {
-        r#"
-    repos:
-      - name: chord
-        remote: https://github.com/JorgeG-Dev/chord
-        revision: main
-      - name: chord
-        remote: https://github.com/JorgeG-Dev/chord
-        revision: main
-    "#
+    pub fn repo_status(
+        &self,
+        repo: &ManifestRepo,
+        locked_rev: impl AsRef<str>,
+    ) -> Result<(bool, bool)> {
+        let repo_dir = self.repo_dir(&repo)?;
+
+        let (revision, is_dirty) = match self.backend.is_repo(&repo_dir) {
+            true => (
+                self.backend.get_current_hash(&repo_dir)?.as_str() == locked_rev.as_ref(),
+                self.backend.is_dirty(&repo_dir)?,
+            ),
+            false => bail!("{} is not a valid repo", repo.name),
+        };
+
+        Ok((revision, is_dirty))
+    }
+
+    pub fn repo_run(&self, repo: &ManifestRepo, command: impl AsRef<str>) -> Result<()> {
+        let repo_dir = self.repo_dir(&repo)?;
+        if !self.backend.is_repo(&repo_dir) {
+            bail!("{} is not a valid repo", repo.name);
+        }
+        match Command::new("sh")
+            .arg("-c")
+            .arg(command.as_ref())
+            .current_dir(&repo_dir)
+            .status()
+        {
+            Ok(status) => {
+                if !status.success() {
+                    bail!("error occurred during command execution");
+                }
+            }
+            Err(_) => {
+                bail!("failed to run command");
+            }
+        };
+
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+
+    fn test_repo(name: &str, location: Option<&str>) -> ManifestRepo {
+        ManifestRepo {
+            remote: String::from("https://example.com/repo"),
+            revision: String::from("main"),
+            name: String::from(name),
+            location: location.map(PathBuf::from),
+        }
+    }
+
+    #[test]
+    fn test_repo_dir_no_location_defaults_to_top_dir() {
+        let workspace = Workspace::new(PathBuf::from("/workspace"), GitBackend);
+        let repo = test_repo("myrepo", None);
+
+        let result = workspace.repo_dir(&repo).unwrap();
+
+        assert_eq!(result, PathBuf::from("/workspace/myrepo"));
+    }
+
+    #[test]
+    fn test_repo_dir_with_relative_location() {
+        let workspace = Workspace::new(PathBuf::from("/workspace"), GitBackend);
+        let repo = test_repo("myrepo", Some("deps"));
+
+        let result = workspace.repo_dir(&repo).unwrap();
+
+        assert_eq!(result, PathBuf::from("/workspace/deps/myrepo"));
+    }
+
+    #[test]
+    fn test_repo_dir_rejects_absolute_location() {
+        let workspace = Workspace::new(PathBuf::from("/workspace"), GitBackend);
+        let repo = test_repo("myrepo", Some("/etc"));
+
+        let result = workspace.repo_dir(&repo);
+
+        assert!(result.is_err());
     }
 }

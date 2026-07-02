@@ -1,3 +1,4 @@
+use super::lockfile::Lockfile;
 use anyhow::{Context, Result};
 use std::fs::File;
 use std::path::{Path, PathBuf};
@@ -30,11 +31,76 @@ pub struct Repo {
 }
 
 impl Manifest {
-    pub fn read(top_dir: &impl AsRef<Path>) -> Result<Self> {
+    /// Opens and deserializes the manifest file into a Manifest struct.
+    pub fn read(top_dir: impl AsRef<Path>) -> Result<Self> {
         let manifest_file =
             File::open(top_dir.as_ref().join("chord.yaml")).context("failed to open manifest")?;
         let manifest =
             serde_saphyr::from_reader(manifest_file).context("failed to parse manifest")?;
         Ok(manifest)
+    }
+
+    /// Updates the manifest with the revisions in the lockfile. This is a
+    /// destructive action, meaning the lockfile gets emptied out into the
+    /// manifest.
+    pub fn apply_lock(&mut self, lockfile: &mut Lockfile) {
+        for repo in &mut self.repos {
+            if let Some(revision) = lockfile.remove(&repo.name) {
+                repo.revision = revision;
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+
+    fn test_repo(name: &str, revision: &str) -> Repo {
+        Repo {
+            remote: String::from("https://example.com/repo"),
+            revision: String::from(revision),
+            name: String::from(name),
+            location: None,
+        }
+    }
+
+    #[test]
+    fn test_apply_lock_overwrites_matching_repo_revision() {
+        let mut manifest = Manifest {
+            repos: vec![test_repo("repo-a", "main")],
+        };
+        let mut lockfile = Lockfile::new();
+        lockfile.insert(String::from("repo-a"), String::from("abc123"));
+
+        manifest.apply_lock(&mut lockfile);
+
+        assert_eq!(manifest.repos[0].revision, "abc123");
+    }
+
+    #[test]
+    fn test_apply_lock_leaves_unmatched_repo_untouched() {
+        let mut manifest = Manifest {
+            repos: vec![test_repo("repo-a", "main")],
+        };
+        let mut lockfile = Lockfile::new();
+        lockfile.insert(String::from("repo-b"), String::from("abc123"));
+
+        manifest.apply_lock(&mut lockfile);
+
+        assert_eq!(manifest.repos[0].revision, "main");
+    }
+
+    #[test]
+    fn test_apply_lock_with_empty_lockfile_changes_nothing() {
+        let mut manifest = Manifest {
+            repos: vec![test_repo("repo-a", "main")],
+        };
+        let mut lockfile = Lockfile::new();
+
+        manifest.apply_lock(&mut lockfile);
+
+        assert_eq!(manifest.repos[0].revision, "main");
     }
 }

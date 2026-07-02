@@ -1,20 +1,15 @@
 //! Contains the logic for performing the Forall command
 use anyhow::{Result, bail};
 use colored::Colorize;
-use std::path::PathBuf;
-use std::process::Command;
 
-use crate::workspace::{GitOperations, Manifest, Operations};
+use crate::workspace::{Manifest, Workspace};
 
 /// Parses the manifest, ensures each repo is valid, goes into each
 /// repo and executes the specified command. Output of each command
 /// execution is displayed to stdout.
-pub fn run(command: Vec<String>, workspace: &impl Operations) -> Result<()> {
-    let top_dir = workspace.top_dir();
-    let operations = workspace.git();
-
+pub fn run(command: Vec<String>, workspace: Workspace) -> Result<()> {
     // 1. Open and parse the manifest file
-    let mut manifest = Manifest::read(&top_dir)?;
+    let mut manifest = Manifest::read(workspace.top_dir())?;
 
     // 2. Create the command string
     let command_str = command.join(" ");
@@ -25,41 +20,14 @@ pub fn run(command: Vec<String>, workspace: &impl Operations) -> Result<()> {
     let mut failed_repos = 0;
     for repo in manifest.repos.drain(..) {
         println!("{}", format!("========== {} ==========", repo.name).blue());
-        let location = repo
-            .location
-            .as_ref()
-            .map(|l| top_dir.join(l))
-            .unwrap_or_else(|| top_dir.to_path_buf());
-        let repo_dir = PathBuf::from(&top_dir)
-            .join(location)
-            .join(repo.name.as_str());
-
-        // Only run the command if a valid repo
-        if !operations.is_repo(&repo_dir) {
-            println!("{}: {} is not a valid repo", "error".red(), repo.name);
-            failed_repos += 1;
-            continue;
-        }
-
-        // Run the command in each repo directory
-        match Command::new("sh")
-            .arg("-c")
-            .arg(&command_str)
-            .current_dir(&repo_dir)
-            .status()
-        {
-            Ok(status) => {
-                if status.success() {
-                    continue;
-                } else {
-                    failed_repos += 1;
-                }
-            }
-            Err(_) => {
-                println!("{}: failed to run command", "error".red());
+        match workspace.repo_run(&repo, &command_str) {
+            Ok(_) => continue,
+            Err(e) => {
+                println!("command failed in {}: {}", repo.name, e);
                 failed_repos += 1;
+                continue;
             }
-        };
+        }
     }
 
     if failed_repos > 0 {
