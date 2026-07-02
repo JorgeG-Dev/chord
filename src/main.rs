@@ -9,8 +9,8 @@ fn main() -> Result<()> {
 
     let result = match args.command {
         Commands::Init { path } => commands::init(path),
-        Commands::Topdir => commands::topdir(),
-        _ => match utils::get_top_dir() {
+        Commands::Topdir { path } => commands::topdir(path),
+        _ => match utils::get_top_dir(".") {
             Some(top_dir) => {
                 let backend = GitBackend;
                 let workspace = Workspace::new(top_dir, backend);
