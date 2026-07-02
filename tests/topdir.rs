@@ -33,5 +33,5 @@ fn test_topdir_not_in_workspace() {
 
     let result = topdir(dir.path());
 
-    assert!(result.is_ok()); // still Ok — just prints "not within a workspace"
+    assert!(result.is_err());
 }

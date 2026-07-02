@@ -1,7 +1,12 @@
 //! Contains the logic for performing the Sync command
-use crate::workspace::{Lockfile, Manifest, Workspace};
+use crate::{
+    ui::RepoProgress,
+    warn_msg,
+    workspace::{Lockfile, Manifest, Workspace},
+};
 
 use anyhow::{Result, bail};
+use colored::Colorize;
 
 /// Attempts to parse the manifest file and sync it to the revisions outlined
 /// in the lockfile, if it exists. If not, a new lockfile is created and each
@@ -13,7 +18,10 @@ pub fn run(workspace: Workspace) -> Result<()> {
     // 2. Try to open the lockfile and get its contents
     let lockfile = match Lockfile::read(workspace.top_dir()) {
         Ok(lockfile) => Some(lockfile),
-        Err(_) => None,
+        Err(_) => {
+            warn_msg!("no lockfile found, falling back to manifest revisions");
+            None
+        }
     };
 
     // 3. If a lockfile was actually parsed, go through the manifest, updating
@@ -28,9 +36,15 @@ pub fn run(workspace: Workspace) -> Result<()> {
     let total_repos = manifest.repos.len();
     let mut new_lockfile = Lockfile::new();
     for mut repo in manifest.repos.drain(..) {
+        let progress = RepoProgress::new(&repo.name);
+        progress.step("syncing");
         match workspace.resolve_repo(&mut repo) {
-            Ok(_) => new_lockfile.insert(repo.name, repo.revision),
-            Err(_) => {
+            Ok(_) => {
+                progress.done();
+                new_lockfile.insert(repo.name, repo.revision)
+            }
+            Err(e) => {
+                progress.failed(e.to_string());
                 failed_repos += 1;
                 continue;
             }
