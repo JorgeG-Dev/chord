@@ -101,3 +101,48 @@ impl Workspace {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+
+    fn test_repo(name: &str, location: Option<&str>) -> ManifestRepo {
+        ManifestRepo {
+            remote: String::from("https://example.com/repo"),
+            revision: String::from("main"),
+            name: String::from(name),
+            location: location.map(PathBuf::from),
+        }
+    }
+
+    #[test]
+    fn test_repo_dir_no_location_defaults_to_top_dir() {
+        let workspace = Workspace::new(PathBuf::from("/workspace"), GitBackend);
+        let repo = test_repo("myrepo", None);
+
+        let result = workspace.repo_dir(&repo).unwrap();
+
+        assert_eq!(result, PathBuf::from("/workspace/myrepo"));
+    }
+
+    #[test]
+    fn test_repo_dir_with_relative_location() {
+        let workspace = Workspace::new(PathBuf::from("/workspace"), GitBackend);
+        let repo = test_repo("myrepo", Some("deps"));
+
+        let result = workspace.repo_dir(&repo).unwrap();
+
+        assert_eq!(result, PathBuf::from("/workspace/deps/myrepo"));
+    }
+
+    #[test]
+    fn test_repo_dir_rejects_absolute_location() {
+        let workspace = Workspace::new(PathBuf::from("/workspace"), GitBackend);
+        let repo = test_repo("myrepo", Some("/etc"));
+
+        let result = workspace.repo_dir(&repo);
+
+        assert!(result.is_err());
+    }
+}
