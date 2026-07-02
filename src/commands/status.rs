@@ -1,7 +1,11 @@
 //! Contains the logic for performing the Status command
-use crate::workspace::{Lockfile, Manifest, Workspace};
+use crate::{
+    warn_msg,
+    workspace::{Lockfile, Manifest, Workspace},
+};
 
 use anyhow::Result;
+use colored::Colorize;
 use comfy_table::{Table, modifiers::UTF8_ROUND_CORNERS, presets::UTF8_FULL};
 
 const STATUS_TABLE_INDEX: usize = 1;
@@ -18,7 +22,7 @@ pub fn run(workspace: Workspace) -> Result<()> {
     let lockfile = match Lockfile::read(workspace.top_dir()) {
         Ok(lockfile) => lockfile,
         Err(_) => {
-            println!(
+            warn_msg!(
                 "no lockfile exists, run `chord sync` or `chord update` to generate a new one"
             );
             Lockfile::new()
@@ -45,7 +49,7 @@ pub fn run(workspace: Workspace) -> Result<()> {
         let (is_locked, is_dirty) = match workspace.repo_status(&repo, current_rev.as_str()) {
             Ok(value) => value,
             Err(e) => {
-                println!("error occurred getting the status of {}: {}", repo.name, e);
+                warn_msg!("error occurred getting the status of {}: {}", repo.name, e);
                 table.add_row(table_entry);
                 continue;
             }

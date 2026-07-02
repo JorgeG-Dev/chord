@@ -2,7 +2,10 @@
 use anyhow::{Result, bail};
 use colored::Colorize;
 
-use crate::workspace::{Manifest, Workspace};
+use crate::{
+    repo_header, warn_msg,
+    workspace::{Manifest, Workspace},
+};
 
 /// Parses the manifest, ensures each repo is valid, goes into each
 /// repo and executes the specified command. Output of each command
@@ -19,11 +22,11 @@ pub fn run(command: Vec<String>, workspace: Workspace) -> Result<()> {
     let total_repos = manifest.repos.len();
     let mut failed_repos = 0;
     for repo in manifest.repos.drain(..) {
-        println!("{}", format!("========== {} ==========", repo.name).blue());
+        repo_header!(repo.name);
         match workspace.repo_run(&repo, &command_str) {
             Ok(_) => continue,
             Err(e) => {
-                println!("command failed in {}: {}", repo.name, e);
+                warn_msg!("command failed in {}: {}", repo.name, e);
                 failed_repos += 1;
                 continue;
             }
