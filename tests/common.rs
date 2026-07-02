@@ -8,6 +8,8 @@ pub const VALID_REPO_NAME: &'static str = "chord";
 pub const INVALID_REPO_REV: &'static str = "invalid";
 pub const INVALID_REPO_NAME: &'static str = "invalid";
 pub const INVALID_REPO_REMOTE: &'static str = "https://github.com/JorgeG-Dev/invalid";
+pub const VALID_LOCATION: &'static str = "valid";
+pub const INVALID_LOCATION: &'static str = "/";
 
 pub fn setup_workspace(manifest_content: &str) -> TempDir {
     let dir = tempfile::tempdir().unwrap();
@@ -19,11 +21,23 @@ pub fn default_manifest() -> String {
     format!(
         r#"
 repos:
-  - name: chord
+  - name: {} 
     remote: {}
     revision: main
 "#,
-        VALID_REPO_REMOTE
+        VALID_REPO_NAME, VALID_REPO_REMOTE
+    )
+}
+
+pub fn malformed_manifest() -> String {
+    format!(
+        r#"
+repos:
+  - this: {} 
+    is: {}
+    wrong: main
+"#,
+        VALID_REPO_NAME, VALID_REPO_REMOTE
     )
 }
 
@@ -164,5 +178,31 @@ pub fn first_commit_lockfile() -> String {
 {}: {} 
 "#,
         VALID_REPO_NAME, FIRST_COMMIT_HASH
+    )
+}
+
+pub fn manifest_with_valid_location() -> String {
+    format!(
+        r#"
+repos:
+  - name: {} 
+    remote: {}
+    revision: main
+    location: {}
+"#,
+        VALID_REPO_NAME, VALID_REPO_REMOTE, VALID_LOCATION
+    )
+}
+
+pub fn manifest_with_invalid_location() -> String {
+    format!(
+        r#"
+repos:
+  - name: {} 
+    remote: {}
+    revision: main
+    location: {}
+"#,
+        VALID_REPO_NAME, VALID_REPO_REMOTE, INVALID_LOCATION
     )
 }
