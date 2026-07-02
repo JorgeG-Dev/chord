@@ -1,8 +1,9 @@
 use anyhow::{Result, anyhow};
 use chord_ws::cli::{Cli, Commands};
-use chord_ws::commands;
 use chord_ws::workspace::{GitBackend, Workspace, utils};
+use chord_ws::{commands, error_msg};
 use clap::Parser;
+use colored::Colorize;
 
 fn main() -> Result<()> {
     let args = Cli::parse();
@@ -27,7 +28,7 @@ fn main() -> Result<()> {
     };
 
     if let Err(e) = &result {
-        println!("Error: {}", e);
+        error_msg!("{}", e);
         std::process::exit(1);
     }
 
