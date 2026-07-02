@@ -33,17 +33,22 @@ impl Workspace {
         &self.top_dir
     }
 
-    fn repo_dir(&self, repo: &ManifestRepo) -> PathBuf {
+    fn repo_dir(&self, repo: &ManifestRepo) -> Result<PathBuf> {
         match &repo.location {
-            Some(location) => self.top_dir.join(location).join(&repo.name),
-            None => self.top_dir.join(&repo.name),
+            Some(location) => {
+                if location.is_absolute() {
+                    bail!("repo has an absolute location, must be relative")
+                }
+                Ok(self.top_dir.join(location).join(&repo.name))
+            }
+            None => Ok(self.top_dir.join(&repo.name)),
         }
     }
 
     /// Resolves the specified repo to the revision specified in its manifest
     /// entry
     pub fn resolve_repo(&self, repo: &mut ManifestRepo) -> Result<()> {
-        let repo_dir = self.repo_dir(&repo);
+        let repo_dir = self.repo_dir(&repo)?;
 
         if !self.backend.is_repo(&repo_dir) {
             self.backend.clone_repo(&repo.remote, &repo_dir)?;
@@ -59,7 +64,7 @@ impl Workspace {
         repo: &ManifestRepo,
         locked_rev: impl AsRef<str>,
     ) -> Result<(bool, bool)> {
-        let repo_dir = self.repo_dir(&repo);
+        let repo_dir = self.repo_dir(&repo)?;
 
         let (revision, is_dirty) = match self.backend.is_repo(&repo_dir) {
             true => (
@@ -73,7 +78,7 @@ impl Workspace {
     }
 
     pub fn repo_run(&self, repo: &ManifestRepo, command: impl AsRef<str>) -> Result<()> {
-        let repo_dir = self.repo_dir(&repo);
+        let repo_dir = self.repo_dir(&repo)?;
         if !self.backend.is_repo(&repo_dir) {
             bail!("{} is not a valid repo", repo.name);
         }
