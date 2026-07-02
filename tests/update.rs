@@ -236,25 +236,6 @@ fn test_update_repo_checkout_fail() {
 }
 
 #[test]
-fn test_update_repo_lockfile_used() {
-    let workspace_dir = common::setup_workspace(common::pinned_commit_manifest().as_str());
-    fs::write(
-        workspace_dir.path().join("chord.lock.yaml"),
-        common::first_commit_lockfile().as_str(),
-    )
-    .unwrap();
-
-    let workspace = Workspace::new(workspace_dir.path().to_path_buf(), GitBackend);
-    let result = update(workspace);
-
-    assert!(result.is_ok());
-    assert!(workspace_dir.path().join(common::VALID_REPO_NAME).exists());
-    assert!(workspace_dir.path().join("chord.lock.yaml").exists());
-    let lockfile = Lockfile::read(workspace_dir.path()).unwrap();
-    assert!(common::PINNED_COMMIT_HASH == lockfile.get(common::VALID_REPO_NAME).unwrap());
-}
-
-#[test]
 fn test_update_stale_lockfile() {
     let workspace_dir = common::setup_workspace(common::default_multi_repo_manifest().as_str());
 
@@ -357,4 +338,23 @@ fn test_update_malformed_manifest() {
     let result = update(workspace);
 
     assert!(result.is_err());
+}
+
+#[test]
+fn test_update_overwrite_pinned_lockfile() {
+    let workspace_dir = common::setup_workspace(common::pinned_commit_manifest().as_str());
+    fs::write(
+        workspace_dir.path().join("chord.lock.yaml"),
+        common::first_commit_lockfile().as_str(),
+    )
+    .unwrap();
+
+    let workspace = Workspace::new(workspace_dir.path().to_path_buf(), GitBackend);
+    let result = update(workspace);
+
+    assert!(result.is_ok());
+    assert!(workspace_dir.path().join(common::VALID_REPO_NAME).exists());
+    assert!(workspace_dir.path().join("chord.lock.yaml").exists());
+    let lockfile = Lockfile::read(workspace_dir.path()).unwrap();
+    assert!(common::PINNED_COMMIT_HASH == lockfile.get(common::VALID_REPO_NAME).unwrap());
 }
