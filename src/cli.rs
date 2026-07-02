@@ -20,7 +20,12 @@ pub enum Commands {
     /// Checks the status of the chord workspace against the manifest
     Status,
     /// Prints the chord workspace root
-    Topdir,
+    Topdir {
+        /// Path from where the top directory search should start,
+        /// defaults to current working directory
+        #[arg(long, default_value = ".")]
+        path: PathBuf,
+    },
     /// Clones missing repos, fetches, and checks out to whatever is in the
     /// lockfile, defaults to chord manifest if there is no lockfile provided
     Sync,
