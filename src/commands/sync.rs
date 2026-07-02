@@ -1,5 +1,6 @@
 //! Contains the logic for performing the Sync command
 use crate::{
+    ui::RepoProgress,
     warn_msg,
     workspace::{Lockfile, Manifest, Workspace},
 };
@@ -35,9 +36,15 @@ pub fn run(workspace: Workspace) -> Result<()> {
     let total_repos = manifest.repos.len();
     let mut new_lockfile = Lockfile::new();
     for mut repo in manifest.repos.drain(..) {
+        let progress = RepoProgress::new(&repo.name);
+        progress.step("syncing");
         match workspace.resolve_repo(&mut repo) {
-            Ok(_) => new_lockfile.insert(repo.name, repo.revision),
-            Err(_) => {
+            Ok(_) => {
+                progress.done();
+                new_lockfile.insert(repo.name, repo.revision)
+            }
+            Err(e) => {
+                progress.failed(e.to_string());
                 failed_repos += 1;
                 continue;
             }
