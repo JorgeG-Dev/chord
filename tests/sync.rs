@@ -308,6 +308,18 @@ fn test_sync_stale_lockfile() {
             .join(format!("{}", common::VALID_REPO_NAME))
             .exists()
     );
+    let lockfile = Lockfile::read(workspace_dir.path()).unwrap();
+    assert!(lockfile.get(common::VALID_REPO_NAME).is_some());
+    assert!(
+        lockfile
+            .get(format!("{}1", common::VALID_REPO_NAME).as_str())
+            .is_none()
+    );
+    assert!(
+        lockfile
+            .get(format!("{}2", common::VALID_REPO_NAME).as_str())
+            .is_none()
+    );
 }
 
 #[test]
