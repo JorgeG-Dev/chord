@@ -120,6 +120,8 @@ chord: <commit hash>
 ```
 ## Planned Work
 
+The following is a list of planned work in no particular priority:
+
 - [ ] SSH Support
     - Limited to clones via https at the moment.
 - [ ] Repo Groups
@@ -136,6 +138,10 @@ chord: <commit hash>
     - The manifest file has to be updated directly. I'd like to add support
     for commands that modify the file itself. Think along the lines of how
     `cargo add` adds stuff to the `Cargo.toml`   
+- [ ] Windows Build
+    - Misleading, but most of the core functionality should work on Windows.
+    Only one that most likely won't work is the `forall` command since it
+    relies on `sh`.
 
 ## AI Usage
 
