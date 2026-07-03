@@ -116,11 +116,11 @@ mod tests {
     fn test_read_with_duplicate_repos() {
         let dir = tempfile::tempdir().unwrap();
         let test_manifest = Manifest {
-            repos: vec![test_repo("repo-a", "repo-b")],
+            repos: vec![test_repo("repo-a", "main"), test_repo("repo-a", "main")],
         };
-        let mut writer = File::create(dir.path().join("chord.lock.yaml")).unwrap();
+        let mut writer = File::create(dir.path().join("chord.yaml")).unwrap();
         serde_saphyr::to_io_writer(&mut writer, &test_manifest).unwrap();
 
-        assert!(Manifest::read(dir.path()).is_err());
+        assert!(Manifest::read(dir.path()).is_err())
     }
 }
