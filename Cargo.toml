@@ -7,6 +7,7 @@ license = "MIT"
 readme = "README.md"
 keywords = ["git", "workspace", "management", "repo"]
 categories = ["command-line-utilities"]
+documentation = "https://docs.rs"
 
 [dependencies]
 anyhow = "1.0.102"
