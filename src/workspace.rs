@@ -48,7 +48,7 @@ impl Workspace {
     /// Resolves the specified repo to the revision specified in its manifest
     /// entry
     pub fn resolve_repo(&self, repo: &mut ManifestRepo) -> Result<()> {
-        let repo_dir = self.repo_dir(&repo)?;
+        let repo_dir = self.repo_dir(repo)?;
 
         if !self.backend.is_repo(&repo_dir) {
             self.backend.clone_repo(&repo.remote, &repo_dir)?;
@@ -64,7 +64,7 @@ impl Workspace {
         repo: &ManifestRepo,
         locked_rev: impl AsRef<str>,
     ) -> Result<(bool, bool)> {
-        let repo_dir = self.repo_dir(&repo)?;
+        let repo_dir = self.repo_dir(repo)?;
 
         let (revision, is_dirty) = match self.backend.is_repo(&repo_dir) {
             true => (
@@ -78,7 +78,7 @@ impl Workspace {
     }
 
     pub fn repo_run(&self, repo: &ManifestRepo, command: impl AsRef<str>) -> Result<()> {
-        let repo_dir = self.repo_dir(&repo)?;
+        let repo_dir = self.repo_dir(repo)?;
         if !self.backend.is_repo(&repo_dir) {
             bail!("{} is not a valid repo", repo.name);
         }

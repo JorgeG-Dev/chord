@@ -38,6 +38,12 @@ impl Lockfile {
     }
 
     pub fn new() -> Self {
-        Self { 0: HashMap::new() }
+        Self(HashMap::new())
+    }
+}
+
+impl Default for Lockfile {
+    fn default() -> Self {
+        Self::new()
     }
 }
