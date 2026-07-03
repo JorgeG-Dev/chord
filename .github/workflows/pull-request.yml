@@ -1,0 +1,30 @@
+name: Pull Request
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Environment setup
+      - name: Checkout repo
+        uses: actions/checkout@v6
+      - name: Set up nix for dev shell
+        uses: DeterminateSystems/nix-installer-action@main
+      - name: Enter dev shell
+        run: nix develop
+
+      - name: Check code format
+        run: cargo fmt --check
+
+      - name: Linter
+        run: cargo clippy
+
+      - name: Tests
+        run: cargo tests
+
+
