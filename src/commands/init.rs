@@ -17,7 +17,7 @@ pub fn run(path: impl AsRef<Path>) -> Result<()> {
     // 2. Create the default configuration
     let default_manifest = Manifest {
         repos: vec![ManifestRepo {
-            remote: String::from("https://github.com/JorgeG-Dev/chord"),
+            remote: String::from("https://github.com/JorgeG-Dev/chord.git"),
             revision: String::from("main"),
             name: String::from("chord"),
             location: Some(PathBuf::from(".")),
