@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Environment setup
+      - name: Checkout repo
+        uses: actions/checkout@v6
+      - name: Set up nix for dev shell
+        uses: DeterminateSystems/nix-installer-action@main
+      - name: Enter dev shell
+        run: nix develop
+
+      - name: Check code format
+        run: cargo fmt --check
+
+      - name: Linter
+        run: cargo clippy --all-features -- -D warnings
+
+      - name: Tests
+        run: cargo test --locked --all-features
+
+      - name: Build
+        run: cargo build --release --locked
+
+      - name: Create Github Release
+        uses: softprops/action-gh-release@v3
+        with:
+          generate_release_notes: true
+          files: |
+            target/release/chord
+
+
