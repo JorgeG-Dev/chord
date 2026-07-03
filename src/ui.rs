@@ -64,7 +64,7 @@ macro_rules! error_msg{
 #[macro_export]
 macro_rules! warn_msg{
     ($($arg:tt)*) => {
-        println!("{} {}", "warn:".red().bold(), format!($($arg)*));
+        println!("{} {}", "warn:".yellow().bold(), format!($($arg)*));
     };
 }
 
