@@ -333,7 +333,7 @@ fn test_sync_valid_location_specified() {
         workspace_dir
             .path()
             .join(common::VALID_LOCATION)
-            .join(format!("{}", common::VALID_REPO_NAME))
+            .join(common::VALID_REPO_NAME.to_string())
             .exists()
     );
 }
@@ -349,7 +349,7 @@ fn test_sync_invalid_location_specified() {
         !workspace_dir
             .path()
             .join(common::INVALID_LOCATION)
-            .join(format!("{}", common::VALID_REPO_NAME))
+            .join(common::VALID_REPO_NAME.to_string())
             .exists()
     );
 }
