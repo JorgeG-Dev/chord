@@ -1,5 +1,6 @@
 use super::lockfile::Lockfile;
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
+use std::collections::HashSet;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 
@@ -35,9 +36,15 @@ impl Manifest {
     pub fn read(top_dir: impl AsRef<Path>) -> Result<Self> {
         let manifest_file =
             File::open(top_dir.as_ref().join("chord.yaml")).context("failed to open manifest")?;
-        let manifest =
+        let manifest: Manifest =
             serde_saphyr::from_reader(manifest_file).context("failed to parse manifest")?;
-        Ok(manifest)
+        let mut unique = HashSet::new();
+        manifest.repos.iter().all(|repo| unique.insert(&repo.name));
+        if unique.len() == manifest.repos.len() {
+            Ok(manifest)
+        } else {
+            bail!("invalid manifest, not all repo names are unique");
+        }
     }
 
     /// Updates the manifest with the revisions in the lockfile. This is a
@@ -56,6 +63,7 @@ impl Manifest {
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+    use tempfile;
 
     fn test_repo(name: &str, revision: &str) -> Repo {
         Repo {
@@ -102,5 +110,17 @@ mod tests {
         manifest.apply_lock(&mut lockfile);
 
         assert_eq!(manifest.repos[0].revision, "main");
+    }
+
+    #[test]
+    fn test_read_with_duplicate_repos() {
+        let dir = tempfile::tempdir().unwrap();
+        let test_manifest = Manifest {
+            repos: vec![test_repo("repo-a", "repo-b")],
+        };
+        let mut writer = File::create(dir.path().join("chord.lock.yaml")).unwrap();
+        serde_saphyr::to_io_writer(&mut writer, &test_manifest).unwrap();
+
+        assert!(Manifest::read(dir.path()).is_err());
     }
 }
