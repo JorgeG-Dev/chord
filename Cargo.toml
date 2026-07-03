@@ -1,6 +1,6 @@
 [package]
 name = "chord-ws"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2024"
 description = "A git repo workspace manager, an alternative to submodules"
 license = "MIT"
