@@ -122,8 +122,10 @@ chord: <commit hash>
 
 The following is a list of planned work in no particular priority:
 
-- [ ] SSH Support
-    - Limited to clones via https at the moment.
+- [X] SSH Support
+    - Works with keys added to the SSH Agent. No plans to add support for
+    passphrase protected keys. SSH key files are a maybe, but would be further
+    down the line if it happens.
 - [ ] Repo Groups
     - Would allow for some cool expansion, like being able to run a `forall`
     command on a subset of repos as opposed to all of them.
