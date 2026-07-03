@@ -1,7 +1,13 @@
 [package]
 name = "chord-ws"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
+description = "A git repo workspace manager, an alternative to submodules"
+license = "MIT"
+readme = "README.md"
+keywords = ["git", "workspace", "management", "repo"]
+categories = ["command-line-utilities"]
+documentation = "https://docs.rs"
 
 [dependencies]
 anyhow = "1.0.102"
