@@ -26,7 +26,7 @@ fn test_init_manifest_has_default_repo() {
     assert_eq!(manifest.repos[0].name, "chord");
     assert_eq!(
         manifest.repos[0].remote,
-        "https://github.com/JorgeG-Dev/chord"
+        "https://github.com/JorgeG-Dev/chord.git"
     );
     assert_eq!(manifest.repos[0].revision, "main");
 }
