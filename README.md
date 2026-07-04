@@ -123,6 +123,7 @@ chord: <commit hash>
 The following is a list of planned work in no particular priority:
 
 - [X] SSH Support
+    - ~~Limited to clones via https at the moment.~~
     - Works with keys added to the SSH Agent. No plans to add support for
     passphrase protected keys. SSH key files are a maybe, but would be further
     down the line if it happens.
