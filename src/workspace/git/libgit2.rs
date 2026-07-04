@@ -1,6 +1,8 @@
 use super::*;
 use anyhow::Result;
-use git2::Repository;
+use git2::{
+    Cred, CredentialType, Error, FetchOptions, RemoteCallbacks, Repository, build::RepoBuilder,
+};
 use std::path::Path;
 
 /// Don't need any fields, just a target for implementing the backend
@@ -45,7 +47,17 @@ impl Operations for Git2Backend {
     }
 
     fn clone_repo(&self, remote: &str, repo_dir: impl AsRef<Path>) -> Result<()> {
-        Repository::clone(remote, repo_dir)?;
+        let mut callbacks = RemoteCallbacks::new();
+        callbacks.credentials(credentials_callback);
+
+        // Keeping the fetch options simple
+        let mut fetch_options = FetchOptions::new();
+        fetch_options.remote_callbacks(callbacks);
+
+        let mut builder = RepoBuilder::new();
+        builder.fetch_options(fetch_options);
+
+        builder.clone(remote, repo_dir.as_ref())?;
         Ok(())
     }
 
@@ -65,9 +77,31 @@ impl Operations for Git2Backend {
     }
 
     fn fetch(&self, repo_dir: impl AsRef<Path>) -> Result<()> {
+        let mut callbacks = RemoteCallbacks::new();
+        callbacks.credentials(credentials_callback);
+
+        // Keeping the fetch options simple
+        let mut fetch_options = FetchOptions::new();
+        fetch_options.remote_callbacks(callbacks);
+
         let repo = Repository::open(repo_dir)?;
         let mut remote = repo.find_remote("origin")?;
-        remote.fetch(&[] as &[&str], None, None)?;
+        remote.fetch(&[] as &[&str], Some(&mut fetch_options), None)?;
         Ok(())
+    }
+}
+
+fn credentials_callback(
+    _: &str,
+    username: Option<&str>,
+    allowed_types: CredentialType,
+) -> Result<Cred, Error> {
+    if allowed_types.is_ssh_key() {
+        match username {
+            Some(username) => Cred::ssh_key_from_agent(username),
+            None => Err(Error::from_str("no username provided in SSH URL")),
+        }
+    } else {
+        Err(Error::from_str("unsupported authentication type requested"))
     }
 }

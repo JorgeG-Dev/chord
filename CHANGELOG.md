@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Added
+
+- Support for `fetch` and `clone` via SSH (SSH-Agent only)
+
 ## [1.0.1] - 2026-07-03
 
 Really minor bug fix found after the first release regarding the output

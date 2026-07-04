@@ -18,7 +18,7 @@ pub fn run(workspace: Workspace) -> Result<()> {
     let mut new_lockfile = Lockfile::new();
     for mut repo in manifest.repos.drain(..) {
         let progress = RepoProgress::new(&repo.name);
-        progress.step("syncing");
+        progress.step("updating");
         match workspace.resolve_repo(&mut repo) {
             Ok(_) => {
                 progress.done();
