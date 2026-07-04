@@ -99,9 +99,7 @@ fn credentials_callback(
     if allowed_types.is_ssh_key() {
         match username {
             Some(username) => Cred::ssh_key_from_agent(username),
-            None => {
-                return Err(Error::from_str("no username provided in SSH URL"));
-            }
+            None => Err(Error::from_str("no username provided in SSH URL")),
         }
     } else {
         Err(Error::from_str("unsupported authentication type requested"))
