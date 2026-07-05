@@ -15,7 +15,7 @@ pub fn add_run(
     let mut manifest = Manifest::read(workspace.top_dir())?;
 
     // 2. Add the new repo
-    manifest.add_repo(name, remote, revision, Some(location));
+    manifest.add_repo(name, remote, revision, Some(location))?;
 
     // 3. Write the new manifest to disk
     manifest.write(workspace.top_dir())?;
