@@ -90,7 +90,7 @@ impl Manifest {
                 return Ok(());
             }
         }
-        bail!("{} does not exist in the manifest", name)
+        bail!("'{}' repo does not exist in the manifest", name)
     }
 
     /// Creates a manifest file of the current configuration, overwriting
@@ -165,5 +165,30 @@ mod tests {
         serde_saphyr::to_io_writer(&mut writer, &test_manifest).unwrap();
 
         assert!(Manifest::read(dir.path()).is_err())
+    }
+
+    #[test]
+    fn test_remove_repo_inexistent_repo() {
+        let mut test_manifest = Manifest {
+            repos: vec![test_repo("repo-a", "main"), test_repo("repo-b", "main")],
+        };
+        assert!(test_manifest.remove_repo(String::from("repo-c")).is_err());
+    }
+
+    #[test]
+    fn test_add_repo_already_exists() {
+        let mut test_manifest = Manifest {
+            repos: vec![test_repo("repo-a", "main"), test_repo("repo-b", "main")],
+        };
+        assert!(
+            test_manifest
+                .add_repo(
+                    String::from("repo-a"),
+                    String::from("url"),
+                    String::from("rev"),
+                    None
+                )
+                .is_err()
+        );
     }
 }
