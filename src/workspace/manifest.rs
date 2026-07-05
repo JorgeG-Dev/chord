@@ -57,6 +57,43 @@ impl Manifest {
             }
         }
     }
+
+    /// Creates a new repo struct and inserts it into the manifest
+    /// file.
+    pub fn add_repo(
+        &mut self,
+        name: String,
+        remote: String,
+        revision: String,
+        location: Option<PathBuf>,
+    ) {
+        self.repos.push(Repo {
+            name,
+            remote,
+            revision,
+            location,
+        });
+    }
+
+    /// Removes a repo with the specified name from the manifest,
+    /// returns error if repo was not found.
+    pub fn remove_repo(&mut self, name: String) -> Result<()> {
+        for i in 0..self.repos.len() {
+            if self.repos[i].name == name {
+                self.repos.remove(i);
+                return Ok(());
+            }
+        }
+        bail!("{} does not exist in the manifest", name)
+    }
+
+    /// Creates a manifest file of the current configuration, overwriting
+    /// any existing one in the provided directory.
+    pub fn write(&mut self, top_dir: impl AsRef<Path>) -> Result<()> {
+        let mut manifest_file = File::create(top_dir.as_ref().join("chord.yaml"))?;
+        serde_saphyr::to_io_writer(&mut manifest_file, &self)?;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
