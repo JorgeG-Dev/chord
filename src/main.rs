@@ -26,8 +26,8 @@ fn main() -> Result<()> {
                             remote,
                             revision,
                             location,
-                        } => commands::manifest_add(name, remote, revision, location),
-                        ManifestOps::Remove { name } => commands::manifest_remove(name),
+                        } => commands::manifest_add(name, remote, revision, location, workspace),
+                        ManifestOps::Remove { name } => commands::manifest_remove(name, workspace),
                     },
                     _ => unreachable!(),
                 }

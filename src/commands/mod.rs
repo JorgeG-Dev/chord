@@ -8,8 +8,8 @@ mod update;
 
 pub use forall::run as forall;
 pub use init::run as init;
-pub use manifest::add as manifest_add;
-pub use manifest::remove as manifest_remove;
+pub use manifest::add_run as manifest_add;
+pub use manifest::remove_run as manifest_remove;
 pub use status::run as status;
 pub use sync::run as sync;
 pub use topdir::run as topdir;
