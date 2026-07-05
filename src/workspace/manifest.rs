@@ -59,20 +59,26 @@ impl Manifest {
     }
 
     /// Creates a new repo struct and inserts it into the manifest
-    /// file.
+    /// file. Repo name must not already exist in manifest.
     pub fn add_repo(
         &mut self,
         name: String,
         remote: String,
         revision: String,
         location: Option<PathBuf>,
-    ) {
+    ) -> Result<()> {
+        for i in 0..self.repos.len() {
+            if self.repos[i].name == name {
+                bail!("'{}' repo  already exists in manifest", name);
+            }
+        }
         self.repos.push(Repo {
             name,
             remote,
             revision,
             location,
         });
+        Ok(())
     }
 
     /// Removes a repo with the specified name from the manifest,
