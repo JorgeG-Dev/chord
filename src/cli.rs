@@ -48,12 +48,15 @@ pub enum ManifestOps {
     /// Adds a new entry to the manifest
     Add {
         /// Name of the repo to add
+        #[arg(value_parser = non_empty_string)]
         name: String,
 
         /// Remote where repo can be accessed
+        #[arg(value_parser = non_empty_string)]
         remote: String,
 
         /// Branch, hash, or tag to checkout
+        #[arg(value_parser = non_empty_string)]
         revision: String,
 
         /// Where to clone the repo to
@@ -64,6 +67,15 @@ pub enum ManifestOps {
     /// Deletes an entry from the manifest
     Remove {
         /// Name of the repo to remove
+        #[arg(value_parser = non_empty_string)]
         name: String,
     },
+}
+
+fn non_empty_string(s: &str) -> Result<String, String> {
+    if s.trim().is_empty() {
+        Err("value cannot be blank".into())
+    } else {
+        Ok(s.to_owned())
+    }
 }
