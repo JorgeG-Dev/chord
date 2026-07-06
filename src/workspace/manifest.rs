@@ -88,7 +88,7 @@ impl Manifest {
     ) -> Result<()> {
         for i in 0..self.repos.len() {
             if self.repos[i].name == name {
-                bail!("'{}' repo  already exists in manifest", name);
+                bail!("'{}' repo already exists in manifest", name);
             }
         }
         self.repos.push(Repo {

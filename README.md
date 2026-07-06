@@ -142,8 +142,8 @@ The following is a list of planned work in no particular priority:
     - ~~The manifest file has to be updated directly. I'd like to add support~~
     ~~for commands that modify the file itself. Think along the lines of how~~
     ~~`cargo add` adds stuff to the `Cargo.toml`~~
-    - Added support for `manifest add` and `manifest remove` which modify the
-    `chord.yaml' file. Users can now add and remove entries to the manifest
+    - Added support for `manifest add`, `manifest modify`, and `manifest remove`,
+    which modify the `chord.yaml` file. Users make changes to the manifest 
     without actually opening the file.
 - [ ] Windows Build
     - Misleading, but most of the core functionality should work on Windows.
