@@ -26,7 +26,7 @@ pub fn remove_run(name: String, workspace: Workspace) -> Result<()> {
     // 1. Open and parse the manifest file
     let mut manifest = Manifest::read(workspace.top_dir())?;
 
-    // 2. Add the new repo
+    // 2. Remove the specified repo
     manifest.remove_repo(name)?;
 
     // 3. Write the new manifest to disk
@@ -53,7 +53,7 @@ pub fn modify_run(
     // 2. Open and parse the manifest file
     let mut manifest = Manifest::read(workspace.top_dir())?;
 
-    // 3. Add the new repo
+    // 3. Modify the specified repo
     manifest.modify_repo(name, new_name, new_remote, new_revision, new_location)?;
 
     // 4. Write the new manifest to disk
