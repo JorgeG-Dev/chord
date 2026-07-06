@@ -21,9 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Added
 
 - Support for `fetch` and `clone` via SSH (SSH-Agent only)
-- Added support for `manifest add` and `manifest remove` commands
+- Added support for `manifest add`, `manifest modify`, and `manifest remove` commands
 
 ### Changed
+
+- Location is now not an optional argument, but it defaults to current directory.
 
 
 ### Removed
