@@ -6,6 +6,11 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
+const DEFAULT_LOCATION: &str = ".";
+fn default_location() -> PathBuf {
+    PathBuf::from(".")
+}
+
 /// Represents the complete Chord manifest file.
 #[derive(Serialize, Deserialize)]
 pub struct Manifest {
@@ -28,10 +33,14 @@ pub struct Repo {
 
     /// The directory to clone the repo to, defaults to the directory where
     /// the Chord manifest is located.
-    pub location: Option<PathBuf>,
+    #[serde(default = "default_location")]
+    pub location: PathBuf,
 }
 
 impl Manifest {
+    pub fn new() -> Self {
+        Manifest { repos: vec![] }
+    }
     /// Opens and deserializes the manifest file into a Manifest struct.
     pub fn read(top_dir: impl AsRef<Path>) -> Result<Self> {
         let manifest_file =
@@ -45,6 +54,14 @@ impl Manifest {
         } else {
             bail!("invalid manifest, not all repo names are unique");
         }
+    }
+
+    /// Creates a manifest file of the current configuration, overwriting
+    /// any existing one in the provided directory.
+    pub fn write(&mut self, top_dir: impl AsRef<Path>) -> Result<()> {
+        let mut manifest_file = File::create(top_dir.as_ref().join("chord.yaml"))?;
+        serde_saphyr::to_io_writer(&mut manifest_file, &self)?;
+        Ok(())
     }
 
     /// Updates the manifest with the revisions in the lockfile. This is a
@@ -76,7 +93,10 @@ impl Manifest {
             name,
             remote,
             revision,
-            location,
+            location: match location {
+                Some(location) => location,
+                None => PathBuf::from(DEFAULT_LOCATION),
+            },
         });
         Ok(())
     }
@@ -93,12 +113,38 @@ impl Manifest {
         bail!("'{}' repo does not exist in the manifest", name)
     }
 
-    /// Creates a manifest file of the current configuration, overwriting
-    /// any existing one in the provided directory.
-    pub fn write(&mut self, top_dir: impl AsRef<Path>) -> Result<()> {
-        let mut manifest_file = File::create(top_dir.as_ref().join("chord.yaml"))?;
-        serde_saphyr::to_io_writer(&mut manifest_file, &self)?;
-        Ok(())
+    /// Modifies the specified repo with the provided values. Returns
+    /// an error if was not found.
+    pub fn modify_repo(
+        &mut self,
+        name: String,
+        new_name: Option<String>,
+        new_remote: Option<String>,
+        new_revision: Option<String>,
+        new_location: Option<PathBuf>,
+    ) -> Result<()> {
+        for i in 0..self.repos.len() {
+            if self.repos[i].name == name {
+                match new_name {
+                    Some(new_name) => self.repos[i].name = new_name,
+                    None => {}
+                };
+                match new_remote {
+                    Some(new_remote) => self.repos[i].remote = new_remote,
+                    None => {}
+                };
+                match new_revision {
+                    Some(new_revision) => self.repos[i].revision = new_revision,
+                    None => {}
+                };
+                match new_location {
+                    Some(new_location) => self.repos[i].location = new_location,
+                    None => {}
+                };
+                return Ok(());
+            }
+        }
+        bail!("'{}' repo does not exist in the manifest", name)
     }
 }
 
@@ -113,7 +159,7 @@ mod tests {
             remote: String::from("https://example.com/repo"),
             revision: String::from(revision),
             name: String::from(name),
-            location: None,
+            location: default_location(),
         }
     }
 
@@ -188,6 +234,19 @@ mod tests {
                     String::from("rev"),
                     None
                 )
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn test_modify_repo_inexistent_repo() {
+        let mut test_manifest = Manifest {
+            repos: vec![test_repo("repo-a", "main"), test_repo("repo-b", "main")],
+        };
+        // Arguments don't matter, repo won't be found
+        assert!(
+            test_manifest
+                .modify_repo(String::from("repo-c"), None, None, None, None)
                 .is_err()
         );
     }
