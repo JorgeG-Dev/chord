@@ -11,6 +11,7 @@ pub const INVALID_REPO_REMOTE: &'static str = "https://github.com/JorgeG-Dev/inv
 pub const VALID_LOCATION: &'static str = "valid";
 pub const INVALID_LOCATION: &'static str = "/";
 pub const INEXISTENT_REPO_NAME: &'static str = "inexistent";
+pub const MODIFIED_REPO_NAME: &'static str = "modified";
 
 pub fn setup_workspace(manifest_content: &str) -> TempDir {
     let dir = tempfile::tempdir().unwrap();
