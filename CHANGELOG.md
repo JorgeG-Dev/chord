@@ -9,7 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Added
 
+
+### Changed
+
+
+### Removed
+
+
+## [1.1.0] - 2026-07-05
+
+## Added
+
 - Support for `fetch` and `clone` via SSH (SSH-Agent only)
+- Added support for `manifest add`, `manifest modify`, and `manifest remove` commands
+
+### Changed
+
+- Location is now not an optional argument, but it defaults to current directory.
+
+
+### Removed
+
 
 ## [1.0.1] - 2026-07-03
 
@@ -44,7 +64,8 @@ It includes the basic operations needed for a Chord workspace.
 ### Removed
 
 
-[unreleased]: https://github.com/JorgeG-Dev/chord/compare/v1.0.1...HEAD
+[unreleased]: https://github.com/JorgeG-Dev/chord/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/JorgeG-Dev/chord/releases/tag/v1.1.0
 [1.0.1]: https://github.com/JorgeG-Dev/chord/releases/tag/v1.0.1
 [1.0.0]: https://github.com/JorgeG-Dev/chord/releases/tag/v1.0.0
 [SemVer]: https://semver.org

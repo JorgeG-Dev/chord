@@ -38,4 +38,67 @@ pub enum Commands {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         command: Vec<String>,
     },
+    /// Modifies the manifest based on the subcommand specified
+    #[command(subcommand)]
+    Manifest(ManifestOps),
+}
+
+#[derive(Debug, Subcommand)]
+pub enum ManifestOps {
+    /// Adds a new repo to the manifest
+    Add {
+        /// Name of the repo to add
+        #[arg(value_parser = non_empty_string)]
+        name: String,
+
+        /// Remote where repo can be accessed
+        #[arg(value_parser = non_empty_string)]
+        remote: String,
+
+        /// Branch, hash, or tag to checkout
+        #[arg(value_parser = non_empty_string)]
+        revision: String,
+
+        /// Where to clone the repo to
+        #[arg(long)]
+        location: Option<PathBuf>,
+    },
+
+    /// Deletes a repo from the manifest
+    Remove {
+        /// Name of the repo to remove
+        #[arg(value_parser = non_empty_string)]
+        name: String,
+    },
+
+    /// Modifies a repo from the manifest
+    Modify {
+        /// Name of the repo to modify
+        #[arg(value_parser = non_empty_string)]
+        name: String,
+
+        // New name of modified repo
+        #[arg(long, value_parser = non_empty_string)]
+        new_name: Option<String>,
+
+        // New remote of modified repo
+        #[arg(long, value_parser = non_empty_string)]
+        new_remote: Option<String>,
+
+        // New revision of modified repo
+        #[arg(long, value_parser = non_empty_string)]
+        new_revision: Option<String>,
+
+        // New location of modified repo
+        #[arg(long)]
+        new_location: Option<PathBuf>,
+    },
+}
+
+fn non_empty_string(s: &str) -> Result<String, String> {
+    if s.trim().is_empty() {
+        Err("value cannot be blank".into())
+    } else {
+        Ok(s.to_owned())
+    }
 }

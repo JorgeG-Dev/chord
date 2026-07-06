@@ -1,5 +1,5 @@
 use anyhow::{Result, anyhow};
-use chord_ws::cli::{Cli, Commands};
+use chord_ws::cli::{Cli, Commands, ManifestOps};
 use chord_ws::workspace::{GitBackend, Workspace, utils};
 use chord_ws::{commands, error_msg};
 use clap::Parser;
@@ -20,6 +20,29 @@ fn main() -> Result<()> {
                     Commands::Sync => commands::sync(workspace),
                     Commands::Update => commands::update(workspace),
                     Commands::Forall { command } => commands::forall(command, workspace),
+                    Commands::Manifest(operation) => match operation {
+                        ManifestOps::Add {
+                            name,
+                            remote,
+                            revision,
+                            location,
+                        } => commands::manifest_add(name, remote, revision, location, workspace),
+                        ManifestOps::Remove { name } => commands::manifest_remove(name, workspace),
+                        ManifestOps::Modify {
+                            name,
+                            new_name,
+                            new_remote,
+                            new_revision,
+                            new_location,
+                        } => commands::manifest_modify(
+                            name,
+                            new_name,
+                            new_remote,
+                            new_revision,
+                            new_location,
+                            workspace,
+                        ),
+                    },
                     _ => unreachable!(),
                 }
             }
