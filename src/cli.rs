@@ -45,7 +45,7 @@ pub enum Commands {
 
 #[derive(Debug, Subcommand)]
 pub enum ManifestOps {
-    /// Adds a new entry to the manifest
+    /// Adds a new repo to the manifest
     Add {
         /// Name of the repo to add
         #[arg(value_parser = non_empty_string)]
@@ -60,15 +60,38 @@ pub enum ManifestOps {
         revision: String,
 
         /// Where to clone the repo to
-        #[arg(long, default_value = ".")]
-        location: PathBuf,
+        #[arg(long)]
+        location: Option<PathBuf>,
     },
 
-    /// Deletes an entry from the manifest
+    /// Deletes a repo from the manifest
     Remove {
         /// Name of the repo to remove
         #[arg(value_parser = non_empty_string)]
         name: String,
+    },
+
+    /// Modifies a repo from the manifest
+    Modify {
+        /// Name of the repo to modify
+        #[arg(value_parser = non_empty_string)]
+        name: String,
+
+        // New name of modified repo
+        #[arg(long, value_parser = non_empty_string)]
+        new_name: Option<String>,
+
+        // New remote of modified repo
+        #[arg(long, value_parser = non_empty_string)]
+        new_remote: Option<String>,
+
+        // New revision of modified repo
+        #[arg(long, value_parser = non_empty_string)]
+        new_revision: Option<String>,
+
+        // New location of modified repo
+        #[arg(long)]
+        new_location: Option<PathBuf>,
     },
 }
 
