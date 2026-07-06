@@ -38,9 +38,11 @@ pub struct Repo {
 }
 
 impl Manifest {
+    /// Initializes a manifest struct with an empty repos vector.
     pub fn new() -> Self {
         Manifest { repos: vec![] }
     }
+
     /// Opens and deserializes the manifest file into a Manifest struct.
     pub fn read(top_dir: impl AsRef<Path>) -> Result<Self> {
         let manifest_file =
@@ -125,26 +127,32 @@ impl Manifest {
     ) -> Result<()> {
         for i in 0..self.repos.len() {
             if self.repos[i].name == name {
-                match new_name {
-                    Some(new_name) => self.repos[i].name = new_name,
-                    None => {}
-                };
-                match new_remote {
-                    Some(new_remote) => self.repos[i].remote = new_remote,
-                    None => {}
-                };
-                match new_revision {
-                    Some(new_revision) => self.repos[i].revision = new_revision,
-                    None => {}
-                };
-                match new_location {
-                    Some(new_location) => self.repos[i].location = new_location,
-                    None => {}
-                };
+                if let Some(new_name) = new_name {
+                    self.repos[i].name = new_name
+                }
+
+                if let Some(new_remote) = new_remote {
+                    self.repos[i].remote = new_remote
+                }
+
+                if let Some(new_revision) = new_revision {
+                    self.repos[i].revision = new_revision
+                }
+
+                if let Some(new_location) = new_location {
+                    self.repos[i].location = new_location
+                }
                 return Ok(());
             }
         }
         bail!("'{}' repo does not exist in the manifest", name)
+    }
+}
+
+/// Uses new to define default instance of struct.
+impl Default for Manifest {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
