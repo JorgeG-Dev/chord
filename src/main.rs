@@ -28,6 +28,20 @@ fn main() -> Result<()> {
                             location,
                         } => commands::manifest_add(name, remote, revision, location, workspace),
                         ManifestOps::Remove { name } => commands::manifest_remove(name, workspace),
+                        ManifestOps::Modify {
+                            name,
+                            new_name,
+                            new_remote,
+                            new_revision,
+                            new_location,
+                        } => commands::manifest_modify(
+                            name,
+                            new_name,
+                            new_remote,
+                            new_revision,
+                            new_location,
+                            workspace,
+                        ),
                     },
                     _ => unreachable!(),
                 }
