@@ -12,7 +12,7 @@ pub use git::GitBackend;
 pub use git::Operations as GitOperations;
 pub use lockfile::Lockfile;
 pub use manifest::Manifest;
-pub use manifest::Repo as ManifestRepo;
+use manifest::Repo as ManifestRepo;
 
 /// Represents the complete Chord workspace, created at the invokation of
 /// the `chord` command.
@@ -34,14 +34,10 @@ impl Workspace {
     }
 
     fn repo_dir(&self, repo: &ManifestRepo) -> Result<PathBuf> {
-        match &repo.location {
-            Some(location) => {
-                if location.is_absolute() {
-                    bail!("repo has an absolute location, must be relative")
-                }
-                Ok(self.top_dir.join(location).join(&repo.name))
-            }
-            None => Ok(self.top_dir.join(&repo.name)),
+        if !repo.location.is_absolute() {
+            Ok(self.top_dir.join(&repo.location).join(&repo.name))
+        } else {
+            bail!("repo has an absolute location, must be relative")
         }
     }
 
@@ -107,19 +103,19 @@ mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
 
-    fn test_repo(name: &str, location: Option<&str>) -> ManifestRepo {
+    fn test_repo(name: &str, location: &str) -> ManifestRepo {
         ManifestRepo {
             remote: String::from("https://example.com/repo"),
             revision: String::from("main"),
             name: String::from(name),
-            location: location.map(PathBuf::from),
+            location: PathBuf::from(location),
         }
     }
 
     #[test]
     fn test_repo_dir_no_location_defaults_to_top_dir() {
         let workspace = Workspace::new(PathBuf::from("/workspace"), GitBackend);
-        let repo = test_repo("myrepo", None);
+        let repo = test_repo("myrepo", ".");
 
         let result = workspace.repo_dir(&repo).unwrap();
 
@@ -129,7 +125,7 @@ mod tests {
     #[test]
     fn test_repo_dir_with_relative_location() {
         let workspace = Workspace::new(PathBuf::from("/workspace"), GitBackend);
-        let repo = test_repo("myrepo", Some("deps"));
+        let repo = test_repo("myrepo", "deps");
 
         let result = workspace.repo_dir(&repo).unwrap();
 
@@ -139,7 +135,7 @@ mod tests {
     #[test]
     fn test_repo_dir_rejects_absolute_location() {
         let workspace = Workspace::new(PathBuf::from("/workspace"), GitBackend);
-        let repo = test_repo("myrepo", Some("/etc"));
+        let repo = test_repo("myrepo", "/etc");
 
         let result = workspace.repo_dir(&repo);
 
