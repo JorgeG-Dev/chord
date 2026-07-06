@@ -51,18 +51,19 @@ cargo install chord-ws
 Usage: chord <COMMAND>
 
 Commands:
-  init    Initializes the chord manifest directory and file
-  status  Checks the status of the chord workspace against the manifest
-  topdir  Prints the chord workspace root
-  sync    Clones missing repos, fetches, and checks out to whatever is in the lockfile, defaults to chord manifest if there is no lockfile provided
-  update  Performs same operations as sync, key difference being that it uses the manifest, regardless of whether there's a lockfile or not
-  forall  Runs a user provided command in each repo in the chord workspace
-  help    Print this message or the help of the given subcommand(s)
+  init      Initializes the chord manifest directory and file
+  status    Checks the status of the chord workspace against the manifest
+  topdir    Prints the chord workspace root
+  sync      Clones missing repos, fetches, and checks out to whatever is in the lockfile, defaults to chord manifest if there is no lockfile provided
+  update    Performs same operations as sync, key difference being that it uses the manifest, regardless of whether there's a lockfile or not
+  forall    Runs a user provided command in each repo in the chord workspace
+  manifest  Modifies the manifest based on the subcommand specified
+  help      Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help     Print help
   -V, --version  Print version
-```
+  ```
 
 ### Quick Start
 
@@ -137,10 +138,13 @@ The following is a list of planned work in no particular priority:
 - [ ] Gitoxide backend
     - Currently using the `git2` crate which is fine, but would be cool to have
     a complete Rust implementation of this project.
-- [ ] Manifest commands
-    - The manifest file has to be updated directly. I'd like to add support
-    for commands that modify the file itself. Think along the lines of how
-    `cargo add` adds stuff to the `Cargo.toml`   
+- [X] Manifest commands
+    - ~~The manifest file has to be updated directly. I'd like to add support~~
+    ~~for commands that modify the file itself. Think along the lines of how~~
+    ~~`cargo add` adds stuff to the `Cargo.toml`~~
+    - Added support for `manifest add` and `manifest remove` which modify the
+    `chord.yaml' file. Users can now add and remove entries to the manifest
+    without actually opening the file.
 - [ ] Windows Build
     - Misleading, but most of the core functionality should work on Windows.
     Only one that most likely won't work is the `forall` command since it
